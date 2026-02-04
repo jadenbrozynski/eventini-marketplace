@@ -7,7 +7,7 @@ export async function GET() {
   const adminDb = getAdminDb();
   const initError = getInitError();
 
-  const debug = {
+  const debug: Record<string, unknown> = {
     env: {
       hasProjectId: !!process.env.FIREBASE_PROJECT_ID,
       projectId: process.env.FIREBASE_PROJECT_ID?.substring(0, 10) + '...',
@@ -22,21 +22,21 @@ export async function GET() {
       hasAdminCredentials,
       adminDbExists: !!adminDb,
       initError: initError?.message || null,
-    },
+    } as Record<string, unknown>,
   };
 
   // Try a simple Firestore query if connected
   if (adminDb) {
     try {
       const collections = await adminDb.listCollections();
-      debug.firebase.collections = collections.map(c => c.id);
+      (debug.firebase as Record<string, unknown>).collections = collections.map(c => c.id);
 
       // Try to get ActiveProviders count
       const activeSnapshot = await adminDb.collection('ActiveProviders').limit(5).get();
-      debug.firebase.activeProvidersCount = activeSnapshot.size;
-      debug.firebase.activeProviderIds = activeSnapshot.docs.map(d => d.id);
+      (debug.firebase as Record<string, unknown>).activeProvidersCount = activeSnapshot.size;
+      (debug.firebase as Record<string, unknown>).activeProviderIds = activeSnapshot.docs.map(d => d.id);
     } catch (e) {
-      debug.firebase.queryError = e instanceof Error ? e.message : String(e);
+      (debug.firebase as Record<string, unknown>).queryError = e instanceof Error ? e.message : String(e);
     }
   }
 
