@@ -2,7 +2,7 @@
 
 import { OnboardingStepProps } from '../types';
 import OnboardingStepWrapper from '../OnboardingStepWrapper';
-import { X, Check } from 'lucide-react';
+import { X, Check, Camera } from 'lucide-react';
 
 const MIN_PHOTOS = 3;
 
