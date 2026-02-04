@@ -103,7 +103,6 @@ export function useProviders(options: UseProvidersOptions = {}): UseProvidersRet
       }
 
       const snapshot = await getDocs(q);
-      console.log('Query succeeded! Document count:', snapshot.size);
       const fetchedProviders: Provider[] = [];
 
       snapshot.forEach((doc) => {
