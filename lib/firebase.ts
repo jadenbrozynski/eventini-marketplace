@@ -11,15 +11,6 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID?.trim(),
 };
 
-console.log('=== FIREBASE CONFIG DEBUG ===');
-console.log('apiKey exists:', !!firebaseConfig.apiKey);
-console.log('authDomain:', firebaseConfig.authDomain);
-console.log('projectId:', firebaseConfig.projectId);
-console.log('storageBucket:', firebaseConfig.storageBucket);
-console.log('messagingSenderId:', firebaseConfig.messagingSenderId);
-console.log('appId exists:', !!firebaseConfig.appId);
-console.log('appId value:', firebaseConfig.appId);
-
 // Check if Firebase is properly configured
 const isFirebaseConfigured = !!(
   firebaseConfig.apiKey &&
@@ -34,22 +25,10 @@ let auth: Auth | null = null;
 let googleProvider: GoogleAuthProvider | null = null;
 
 if (isFirebaseConfigured) {
-  try {
-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-    db = getFirestore(app);
-    auth = getAuth(app);
-    googleProvider = new GoogleAuthProvider();
-    console.log('=== FIREBASE INITIALIZED SUCCESSFULLY ===');
-  } catch (error) {
-    console.error('=== FIREBASE INIT ERROR ===', error);
-  }
-} else {
-  console.error('=== FIREBASE NOT CONFIGURED ===');
-  console.error('Missing:', {
-    apiKey: !firebaseConfig.apiKey,
-    authDomain: !firebaseConfig.authDomain,
-    projectId: !firebaseConfig.projectId,
-  });
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  db = getFirestore(app);
+  auth = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
 }
 
 export { app, db, auth, googleProvider, isFirebaseConfigured };
