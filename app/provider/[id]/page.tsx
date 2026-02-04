@@ -714,6 +714,45 @@ export default function ProviderDetailPage() {
     minimumOrderRequirement: rawProvider.minimumOrderRequirement as string | undefined,
     productItems: rawProvider.productItems as any[] | undefined,
     productTypes: rawProvider.productTypes as string[] | undefined,
+    // Vendor service items
+    serviceItems: rawProvider.serviceItems as any[] | undefined,
+    serviceCategory: rawProvider.serviceCategory as string | undefined,
+    businessType: rawProvider.businessType as string | undefined,
+    serviceDescription: rawProvider.serviceDescription as string | undefined,
+    productDescription: rawProvider.productDescription as string | undefined,
+    averagePriceRange: rawProvider.averagePriceRange as string | undefined,
+    // Entertainment fields
+    actDescription: rawProvider.actDescription as string | undefined,
+    performanceAreaRequirements: rawProvider.performanceAreaRequirements as string | undefined,
+    setupTime: rawProvider.setupTime as string | undefined,
+    teardownTime: rawProvider.teardownTime as string | undefined,
+    amplification: rawProvider.amplification as string | undefined,
+    performanceTypes: rawProvider.performanceTypes as string[] | undefined,
+    performanceStyles: rawProvider.performanceStyles as string[] | undefined,
+    achievements: rawProvider.achievements as string | undefined,
+    demoAudio: rawProvider.demoAudio as string | undefined,
+    performanceVideo: rawProvider.performanceVideo as string | undefined,
+    allAudio: rawProvider.allAudio as string[] | undefined,
+    allVideos: rawProvider.allVideos as string[] | undefined,
+    travelNotes: rawProvider.travelNotes as string | undefined,
+    feeStructureDetails: rawProvider.feeStructureDetails as any[] | undefined,
+    // Venue fields
+    venueSpaces: rawProvider.venueSpaces as any[] | undefined,
+    accessibility: rawProvider.accessibility as string[] | undefined,
+    houseRules: rawProvider.houseRules as string[] | undefined,
+    noiseCurfew: rawProvider.noiseCurfew as string | undefined,
+    minimumHours: rawProvider.minimumHours as string | undefined,
+    cleaningFee: rawProvider.cleaningFee as string | undefined,
+    // Common fields
+    depositPercentage: rawProvider.depositPercentage as number | undefined,
+    depositDueAtBooking: rawProvider.depositDueAtBooking as string | undefined,
+    calendarAvailability: rawProvider.calendarAvailability as string | undefined,
+    // F&B service options
+    offersPickup: rawProvider.offersPickup as boolean | undefined,
+    offersDelivery: rawProvider.offersDelivery as boolean | undefined,
+    offersOnSite: rawProvider.offersOnSite as boolean | undefined,
+    deliveryFee: rawProvider.deliveryFee as string | undefined,
+    pickupLocation: rawProvider.pickupLocation as string | undefined,
   } : null;
 
   // Default to catering if no a la carte items
