@@ -1,9 +1,8 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
-// Check if we're in a build/prerender phase - skip Firebase in these cases
-const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build' ||
-                     process.env.NODE_ENV === 'production' && typeof window === 'undefined' && !process.env.VERCEL_URL;
+// Check if we're in a build phase - only skip if explicitly building
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
 
 // Check if all required environment variables are present
 const hasAdminCredentials = !!(
@@ -17,7 +16,7 @@ let _adminDb: Firestore | null = null;
 let _initialized = false;
 let _initError: Error | null = null;
 
-// Format the private key - handle various escaping scenarios
+// Format the private key - handle various escaping scenarios from Vercel env vars
 function formatPrivateKey(key: string | undefined): string {
   if (!key) return '';
 
@@ -32,13 +31,17 @@ function formatPrivateKey(key: string | undefined): string {
     }
   }
 
-  // Replace literal \n with actual newlines (common in env vars)
+  // Handle the case where the key might be double-escaped
+  // (e.g., \\\\n instead of \\n)
+  while (formattedKey.includes('\\\\n')) {
+    formattedKey = formattedKey.replace(/\\\\n/g, '\\n');
+  }
+
+  // Replace literal \n with actual newlines
   formattedKey = formattedKey.replace(/\\n/g, '\n');
 
-  // Ensure proper PEM format
-  if (!formattedKey.includes('-----BEGIN')) {
-    return '';
-  }
+  // Trim any leading/trailing whitespace
+  formattedKey = formattedKey.trim();
 
   return formattedKey;
 }
@@ -55,7 +58,12 @@ function initializeFirebaseAdmin(): void {
   }
 
   if (!hasAdminCredentials) {
-    console.log('Firebase Admin credentials not configured');
+    console.log('Firebase Admin credentials not configured:', {
+      hasProjectId: !!process.env.FIREBASE_PROJECT_ID,
+      hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+      hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+      privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0,
+    });
     return;
   }
 
@@ -63,10 +71,19 @@ function initializeFirebaseAdmin(): void {
     const privateKey = formatPrivateKey(process.env.FIREBASE_PRIVATE_KEY);
 
     if (!privateKey) {
-      console.error('Firebase private key is empty or invalid after formatting');
+      console.error('Firebase private key is empty after formatting');
       _initError = new Error('Invalid private key format');
       return;
     }
+
+    // Log key format for debugging (first and last few chars only)
+    const keyStart = privateKey.substring(0, 30);
+    const keyEnd = privateKey.substring(privateKey.length - 30);
+    console.log('Private key format check:', {
+      startsCorrectly: keyStart.includes('-----BEGIN'),
+      endsCorrectly: keyEnd.includes('-----END'),
+      totalLength: privateKey.length,
+    });
 
     // Initialize Firebase Admin SDK with environment variables
     const firebaseAdminConfig = {
@@ -82,6 +99,7 @@ function initializeFirebaseAdmin(): void {
 
     // Initialize Firestore
     _adminDb = getFirestore(_app);
+    console.log('Firebase Admin initialized successfully');
   } catch (error) {
     console.error('Failed to initialize Firebase Admin:', error);
     _initError = error instanceof Error ? error : new Error(String(error));
