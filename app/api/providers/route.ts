@@ -192,6 +192,20 @@ async function fetchActiveProviders(): Promise<Provider[]> {
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if Firebase Admin is configured
+    if (!hasAdminCredentials || !adminDb) {
+      console.error('Firebase Admin not configured. Missing credentials:', {
+        hasProjectId: !!process.env.FIREBASE_PROJECT_ID,
+        hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+        hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+        privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0,
+      });
+      return NextResponse.json(
+        { error: 'Firebase not configured', providers: [], total: 0 },
+        { status: 503 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') as ProviderCategory | null;
     const featured = searchParams.get('featured');
