@@ -217,8 +217,7 @@ export default function MarketplacePage() {
   const { user, signOut, isProvider } = useAuth();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [providers, setProviders] = useState<Provider[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { providers, isLoading } = useProviders();
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
