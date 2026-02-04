@@ -42,6 +42,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import ServiceAreaMap from '@/components/ServiceAreaMap';
+import { useProvider } from '@/hooks/useProvider';
 
 interface MenuItem {
   id?: string;
@@ -638,8 +639,7 @@ function PackageDetailModal({ pkg, onClose }: { pkg: CateringPackage; onClose: (
 export default function ProviderDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [provider, setProvider] = useState<ProviderDetails | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { provider: rawProvider, isLoading } = useProvider(params.id as string);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
