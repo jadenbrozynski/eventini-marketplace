@@ -83,15 +83,7 @@ export function useProviders(options: UseProvidersOptions = {}): UseProvidersRet
   const [error, setError] = useState<Error | null>(null);
 
   const fetchProviders = useCallback(async () => {
-    console.log('=== FIREBASE DEBUG ===');
-    console.log('db exists:', !!db);
-    console.log('API_KEY exists:', !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
-    console.log('PROJECT_ID:', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
-    console.log('APP_ID exists:', !!process.env.NEXT_PUBLIC_FIREBASE_APP_ID);
-    console.log('AUTH_DOMAIN:', process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN);
-
     if (!db) {
-      console.error('Firebase db is null - not configured');
       setError(new Error('Firebase not configured'));
       setIsLoading(false);
       return;
@@ -101,7 +93,6 @@ export function useProviders(options: UseProvidersOptions = {}): UseProvidersRet
       setIsLoading(true);
       setError(null);
 
-      console.log('Attempting to read from ActiveProviders collection...');
       // Read directly from ActiveProviders collection
       const activeProvidersRef = collection(db, 'ActiveProviders');
       let q = query(activeProvidersRef);
