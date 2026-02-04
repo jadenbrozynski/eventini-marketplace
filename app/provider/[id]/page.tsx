@@ -709,13 +709,11 @@ export default function ProviderDetailPage() {
     alcoholPolicy: rawProvider.alcoholPolicy as string | undefined,
     wifiAvailable: rawProvider.wifiAvailable as boolean | undefined,
     rentalFeeHourly: rawProvider.rentalFeeHourly as string | undefined,
-    rentalFeeFlatRate: rawProvider.rentalFeeFlatRate as string | undefined,
-    productCategories: rawProvider.productCategories as string[] | undefined,
-    shippingOptions: rawProvider.shippingOptions as string[] | undefined,
-    customizationAvailable: rawProvider.customizationAvailable as boolean | undefined,
-    minimumOrderQuantity: rawProvider.minimumOrderQuantity as string | undefined,
-    priceRangeLow: rawProvider.priceRangeLow as string | undefined,
-    priceRangeHigh: rawProvider.priceRangeHigh as string | undefined,
+    rentalFeeFlat: rawProvider.rentalFeeFlat as string | undefined,
+    productCategory: rawProvider.productCategory as string | undefined,
+    minimumOrderRequirement: rawProvider.minimumOrderRequirement as string | undefined,
+    productItems: rawProvider.productItems as any[] | undefined,
+    productTypes: rawProvider.productTypes as string[] | undefined,
   } : null;
 
   // Default to catering if no a la carte items
