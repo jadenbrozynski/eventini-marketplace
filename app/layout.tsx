@@ -22,9 +22,6 @@ export const metadata: Metadata = {
       app_store_id: '6751104982',
     },
   },
-  other: {
-    'apple-itunes-app': 'app-id=6751104982, app-argument=eventini://',
-  },
 };
 
 export default function RootLayout({
@@ -34,9 +31,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <meta name="apple-itunes-app" content="app-id=6751104982, app-argument=eventini://" />
-      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>
           {children}
