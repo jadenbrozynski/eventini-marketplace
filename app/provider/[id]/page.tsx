@@ -23,14 +23,11 @@ import {
   Package,
   CheckCircle2,
   Play,
-  Pause,
   X,
   Grid3X3,
   Award,
   Leaf,
   ShieldCheck,
-  Calendar,
-  Car,
   Wifi,
   Volume2,
   DollarSign,
@@ -38,8 +35,13 @@ import {
   Facebook,
   Twitter,
   Youtube,
-  ExternalLink,
+  Navigation,
+  Sparkles,
+  Lock,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
+import ServiceAreaMap from '@/components/ServiceAreaMap';
 
 interface MenuItem {
   id?: string;
@@ -47,45 +49,26 @@ interface MenuItem {
   description?: string;
   price: number;
   image?: string;
+  imageUrl?: string;
   category?: string;
   dietaryBadges?: string[];
-  isAvailable?: boolean;
 }
 
 interface CateringPackage {
+  id?: string;
   name: string;
   description?: string;
-  basePrice: number;
+  basePrice?: number;
+  costPerPerson?: number;
+  price?: number;
+  pricingType?: string;
   image?: string;
-}
-
-interface NonprofitFlexibility {
-  reduceMinimum?: boolean;
-  reducedMinimum?: string;
-  waiveMinimum?: boolean;
-  discountedMenu?: boolean;
-  discountPercentage?: string;
-  freeServices?: boolean;
-  reduceFee?: boolean;
-  waiveFee?: boolean;
-}
-
-interface HighVolumePartner {
-  reduceMinimum?: boolean;
-  reducedMinimum?: string;
-  waiveMinimum?: boolean;
-  packageDeals?: boolean;
-  reduceFee?: boolean;
-  reduceFeeValue?: number;
-}
-
-interface SocialMedia {
-  instagram?: string;
-  facebook?: string;
-  tiktok?: string;
-  twitter?: string;
-  linkedin?: string;
-  youtube?: string;
+  imageUrl?: string;
+  menuItems?: any[];
+  menuCategories?: any[];
+  beverages?: any[];
+  addOns?: any[];
+  rules?: any[];
 }
 
 interface ProviderDetails {
@@ -99,7 +82,8 @@ interface ProviderDetails {
   website?: string;
   city?: string;
   state?: string;
-  zipCode?: string;
+  lat?: number;
+  lng?: number;
   rating?: number;
   reviewCount?: number;
   imageUrls: string[];
@@ -111,156 +95,460 @@ interface ProviderDetails {
   description?: string;
   ownerIdentityTags?: string[];
   leadTimeRequired?: string;
-  calendarAvailability?: string;
-  socialMedia?: SocialMedia;
+  socialMedia?: any;
   cancellationPolicy?: string;
-  cancellationPolicyDetails?: string;
-
-  // Food & Beverage
   cuisineTypes?: string;
   serviceStyle?: string;
   dietarySpecialties?: string[];
   traits?: string[];
   minimumGuarantee?: string;
   foodTruckDimensions?: string;
-  menuAlaCarte?: string;
-  menuCatering?: string;
   aLaCarteMenu?: MenuItem[];
   cateringPackages?: CateringPackage[];
-  taxRate?: number;
-  nonprofitFlexibility?: NonprofitFlexibility;
-  highVolumePartner?: HighVolumePartner;
-
-  // Entertainment
+  nonprofitFlexibility?: any;
+  highVolumePartner?: any;
   genres?: string;
   performanceType?: string;
   performanceLength?: string;
   technicalRequirements?: string;
-  performanceTypes?: string[];
-  performanceStyles?: string[];
   specializations?: string[];
-  achievements?: string;
   compensationFlatFee?: string;
   compensationHourly?: string;
-  feeStructureDetails?: string[];
-  demoAudio?: string;
-  performanceVideo?: string;
-  allAudio?: string[];
-  allVideos?: string[];
-  travelPolicy?: string;
-  travelNotes?: string;
   basedIn?: string;
-  setupTime?: string;
-  teardownTime?: string;
-  amplification?: string;
-  performanceAreaRequirements?: string;
-
-  // Venues
+  travelPolicy?: string;
   venueType?: string;
   capacitySeated?: string;
   capacityStanding?: string;
   squareFootage?: string;
-  layoutOptions?: string;
   amenities?: string[];
-  accessibility?: string[];
   includedRentals?: string[];
   parking?: string;
-  parkingDetails?: string;
   kitchenAccess?: string;
-  kitchenAccessDetails?: string;
   alcoholPolicy?: string;
-  alcoholPolicyDetails?: string;
-  securityRequirements?: string;
-  securityCameras?: boolean;
   wifiAvailable?: boolean;
-  wifiName?: string;
-  houseRules?: string[];
-  noiseCurfew?: string;
-  noiseCurfewRestrictions?: string;
-  preferredVendorList?: boolean;
-  allowOutsideVendors?: boolean;
-  externalVendorsAllowed?: string;
   rentalFeeHourly?: string;
   rentalFeeFlat?: string;
   minimumSpendRequirement?: string;
-  minimumHours?: string;
-  cleaningFee?: string;
-  cleaningFeeAmount?: string;
-  depositRequired?: string;
-  requiresInsurance?: boolean;
-  insuranceLiabilityRequirements?: string;
   historicLandmark?: boolean;
   waterfront?: boolean;
   rooftop?: boolean;
-  uniqueArchitecture?: boolean;
-  fullService?: boolean;
-  blankCanvas?: boolean;
   ecoFriendly?: boolean;
-  customDifferentiators?: string[];
-
-  // Vendors
   productCategory?: string;
-  productionType?: string;
-  averagePriceRange?: string;
   inventoryModel?: string;
   minimumOrderRequirement?: string;
   serviceItems?: any[];
   productItems?: any[];
+  // Availability
+  calendarAvailability?: string;
+  // Deposit
+  depositPercentage?: number;
+  depositDueAtBooking?: string;
 }
 
-// Loading skeleton for detail page
-function DetailSkeleton() {
+// Highlight row component (Airbnb style)
+function HighlightRow({ icon: Icon, title, subtitle }: { icon: any; title: string; subtitle: string }) {
   return (
-    <div className="min-h-screen bg-white">
-      <div className="sticky top-0 z-30 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center">
-          <div className="h-5 w-20 bg-gray-200 rounded animate-pulse" />
+    <div className="flex items-start gap-4 py-4">
+      <Icon className="w-6 h-6 text-gray-700 flex-shrink-0 mt-0.5" />
+      <div>
+        <p className="font-medium text-gray-900 text-[15px]">{title}</p>
+        <p className="text-gray-500 text-sm">{subtitle}</p>
+      </div>
+    </div>
+  );
+}
+
+// Catering package card with expandable details
+function CateringPackageCard({ pkg, onViewDetails }: { pkg: CateringPackage; onViewDetails: () => void }) {
+  const price = pkg.costPerPerson || pkg.basePrice || pkg.price || 0;
+  const pricingType = pkg.pricingType || 'per_person';
+  const image = pkg.image || pkg.imageUrl;
+
+  return (
+    <button
+      onClick={onViewDetails}
+      className="w-full text-left border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow bg-white"
+    >
+      <div className="relative h-32 bg-gray-100">
+        {image ? (
+          <Image src={image} alt={pkg.name} fill className="object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Utensils className="w-8 h-8 text-gray-300" />
+          </div>
+        )}
+        <div className="absolute bottom-2 right-2 bg-white px-2 py-1 rounded-md text-sm font-semibold shadow">
+          ${price}{pricingType === 'flat_fee' ? '' : '/person'}
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-4 gap-2 h-[400px] rounded-xl overflow-hidden mb-8">
-          <div className="col-span-2 row-span-2 bg-gray-200 animate-pulse" />
-          <div className="bg-gray-200 animate-pulse" />
-          <div className="bg-gray-200 animate-pulse" />
-          <div className="bg-gray-200 animate-pulse" />
-          <div className="bg-gray-200 animate-pulse" />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="h-10 w-3/4 bg-gray-200 rounded animate-pulse" />
-            <div className="h-6 w-1/2 bg-gray-200 rounded animate-pulse" />
-            <div className="h-32 w-full bg-gray-200 rounded animate-pulse" />
+      <div className="p-3">
+        <h4 className="font-semibold text-gray-900 text-sm">{pkg.name || 'Package'}</h4>
+        {pkg.description && (
+          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{pkg.description}</p>
+        )}
+        <p className="text-xs text-[#44646c] font-medium mt-2">Tap to view details</p>
+      </div>
+    </button>
+  );
+}
+
+// Menu Item Detail Modal
+function MenuItemDetailModal({ item, onClose }: { item: any; onClose: () => void }) {
+  const itemImage = item.image || item.imageUrl;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 z-10 w-8 h-8 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-md hover:bg-white transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* Image - only show if exists */}
+        {itemImage ? (
+          <div className="relative h-56 bg-gray-100">
+            <Image src={itemImage} alt={item.name} fill className="object-cover" />
           </div>
-          <div>
-            <div className="h-64 w-full bg-gray-200 rounded-xl animate-pulse" />
+        ) : (
+          <div className="h-32 bg-gray-100 flex items-center justify-center">
+            <Utensils className="w-12 h-12 text-gray-300" />
           </div>
+        )}
+
+        {/* Content */}
+        <div className="p-5">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <h2 className="text-lg font-semibold text-gray-900">{item.name}</h2>
+            {item.price && (
+              <span className="text-lg font-bold text-gray-900 shrink-0">
+                ${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
+              </span>
+            )}
+          </div>
+
+          {item.description && (
+            <p className="text-gray-600 text-sm leading-relaxed mb-4">{item.description}</p>
+          )}
+
+          {/* Dietary badges */}
+          {item.dietaryBadges && item.dietaryBadges.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {item.dietaryBadges.map((badge: string, i: number) => (
+                <span key={i} className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">
+                  {badge}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <button
+            onClick={onClose}
+            className="w-full bg-[#44646c] text-white font-semibold py-3 rounded-xl hover:bg-[#3a565d] transition-colors"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-// Identity tag badge component
-function IdentityTag({ tag }: { tag: string }) {
-  const tagConfig: Record<string, { label: string; icon: React.ReactNode; bgColor: string; textColor: string }> = {
-    'nonprofit': { label: 'Nonprofit', icon: <Heart className="w-3 h-3" />, bgColor: 'bg-green-100', textColor: 'text-green-800' },
-    'woman-owned': { label: 'Woman-Owned', icon: <Award className="w-3 h-3" />, bgColor: 'bg-purple-100', textColor: 'text-purple-800' },
-    'veteran-owned': { label: 'Veteran-Owned', icon: <ShieldCheck className="w-3 h-3" />, bgColor: 'bg-blue-100', textColor: 'text-blue-800' },
-    'minority-owned': { label: 'Minority-Owned', icon: <Award className="w-3 h-3" />, bgColor: 'bg-orange-100', textColor: 'text-orange-800' },
-    'lgbtq-owned': { label: 'LGBTQ+ Owned', icon: <Award className="w-3 h-3" />, bgColor: 'bg-pink-100', textColor: 'text-pink-800' },
-    'eco-friendly': { label: 'Eco-Friendly', icon: <Leaf className="w-3 h-3" />, bgColor: 'bg-green-100', textColor: 'text-green-800' },
-    'local': { label: 'Local Business', icon: <MapPin className="w-3 h-3" />, bgColor: 'bg-amber-100', textColor: 'text-amber-800' },
-    'family-owned': { label: 'Family-Owned', icon: <Users className="w-3 h-3" />, bgColor: 'bg-rose-100', textColor: 'text-rose-800' },
-  };
-
-  const normalizedTag = tag.toLowerCase().replace(/\s+/g, '-');
-  const config = tagConfig[normalizedTag] || { label: tag, icon: <Award className="w-3 h-3" />, bgColor: 'bg-gray-100', textColor: 'text-gray-800' };
+// Menu item card with image (clickable)
+function MenuItemCard({ item, index, onClick }: { item: any; index: number; onClick: () => void }) {
+  const itemImage = item.image || item.imageUrl;
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.textColor}`}>
-      {config.icon}
-      {config.label}
-    </span>
+    <button
+      onClick={onClick}
+      className="flex flex-col p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-left w-full"
+    >
+      {itemImage ? (
+        <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-gray-200 mb-2">
+          <Image src={itemImage} alt={item.name || 'Menu item'} fill className="object-cover" />
+        </div>
+      ) : (
+        <div className="w-full aspect-[4/3] rounded-lg bg-gray-200 mb-2 flex items-center justify-center">
+          <Utensils className="w-8 h-8 text-gray-400" />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-gray-900 text-sm line-clamp-2">{item.name}</p>
+        {item.description && (
+          <p className="text-xs text-gray-500 line-clamp-2 mt-1">{item.description}</p>
+        )}
+        {item.price > 0 && (
+          <p className="text-sm font-semibold text-[#44646c] mt-2">
+            ${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
+          </p>
+        )}
+      </div>
+    </button>
+  );
+}
+
+// Package detail modal - Listing page style
+function PackageDetailModal({ pkg, onClose }: { pkg: CateringPackage; onClose: () => void }) {
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const price = pkg.costPerPerson || pkg.basePrice || pkg.price || 0;
+  const pricingType = pkg.pricingType || 'per_person';
+  const image = pkg.image || pkg.imageUrl;
+  const menuItems = pkg.menuItems || [];
+  const menuCategories = pkg.menuCategories || [];
+  const beverages = pkg.beverages || [];
+  const addOns = pkg.addOns || [];
+  const rules = pkg.rules || [];
+
+  return (
+    <>
+      <div className="fixed inset-0 z-50 bg-white overflow-auto">
+        {/* Header */}
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
+          <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
+            <button onClick={onClose} className="flex items-center gap-1 text-gray-700 hover:text-gray-900">
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-medium">Back</span>
+            </button>
+            <div className="text-right">
+              <span className="text-lg font-semibold text-gray-900">${price}</span>
+              <span className="text-sm text-gray-500 ml-1">{pricingType === 'flat_fee' ? 'flat' : '/person'}</span>
+            </div>
+          </div>
+        </header>
+
+        {/* Content */}
+        <div className="max-w-3xl mx-auto px-4 py-6">
+          {/* Title */}
+          <h1 className="text-2xl font-semibold text-gray-900 mb-1">{pkg.name}</h1>
+          {pkg.description && (
+            <p className="text-gray-500 text-sm mb-4">{pkg.description}</p>
+          )}
+
+          {/* Image - Matching listing page style */}
+          {image && (
+            <div className="relative h-[200px] sm:h-[280px] rounded-xl overflow-hidden bg-gray-100 mb-6">
+              <Image src={image} alt={pkg.name} fill className="object-cover" />
+            </div>
+          )}
+
+          {/* Menu Categories */}
+          {menuCategories.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4">
+                Menu
+              </h2>
+              {menuCategories.map((cat: any, idx: number) => (
+                <div key={idx} className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-medium text-gray-900">{cat.name}</h3>
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                      {(cat.items || []).length} items
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {(cat.items || []).map((item: any, i: number) => (
+                      <MenuItemCard
+                        key={i}
+                        item={item}
+                        index={idx * 10 + i}
+                        onClick={() => setSelectedItem(item)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Legacy Menu Items */}
+          {menuItems.length > 0 && menuCategories.length === 0 && (
+            <div className="mb-8">
+              <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4">
+                Included Items
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {menuItems.map((item: any, i: number) => {
+                  const itemObj = typeof item === 'string' ? { name: item } : item;
+                  return (
+                    <MenuItemCard
+                      key={i}
+                      item={itemObj}
+                      index={i}
+                      onClick={() => setSelectedItem(itemObj)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Beverages */}
+          {beverages.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4">
+                Beverages
+              </h2>
+              {(() => {
+                const hasImages = beverages.some((item: any) => {
+                  const bevObj = typeof item === 'string' ? {} : item;
+                  return bevObj.image || bevObj.imageUrl;
+                });
+
+                if (hasImages) {
+                  return (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {beverages.map((item: any, i: number) => {
+                        const bevObj = typeof item === 'string' ? { name: item } : item;
+                        const bevImage = bevObj.image || bevObj.imageUrl;
+                        return (
+                          <div key={i} className="flex flex-col p-3 bg-blue-50 rounded-xl">
+                            {bevImage ? (
+                              <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-blue-100 mb-2">
+                                <Image src={bevImage} alt={bevObj.name || 'Beverage'} fill className="object-cover" />
+                              </div>
+                            ) : (
+                              <div className="w-full aspect-[4/3] rounded-lg bg-blue-100 mb-2 flex items-center justify-center">
+                                <span className="text-2xl">🥤</span>
+                              </div>
+                            )}
+                            <p className="font-medium text-gray-900 text-sm line-clamp-2">{bevObj.name}</p>
+                            {bevObj.price > 0 && (
+                              <p className="text-sm font-semibold text-blue-600 mt-1">
+                                ${typeof bevObj.price === 'number' ? bevObj.price.toFixed(2) : bevObj.price}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+
+                // No images - show simple list
+                return (
+                  <div className="grid grid-cols-2 gap-2">
+                    {beverages.map((item: any, i: number) => {
+                      const bevName = typeof item === 'string' ? item : item.name;
+                      const bevPrice = typeof item === 'object' ? item.price : null;
+                      return (
+                        <div key={i} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                          <span className="text-sm text-gray-700">{bevName}</span>
+                          {bevPrice > 0 && (
+                            <span className="text-sm font-medium text-blue-600">${bevPrice}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Add-ons */}
+          {addOns.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4">
+                Add-ons
+              </h2>
+              {(() => {
+                const hasImages = addOns.some((item: any) => {
+                  const addOnObj = typeof item === 'string' ? {} : item;
+                  return addOnObj.image || addOnObj.imageUrl;
+                });
+
+                if (hasImages) {
+                  return (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {addOns.map((item: any, i: number) => {
+                        const addOnObj = typeof item === 'string' ? { name: item } : item;
+                        const addOnImage = addOnObj.image || addOnObj.imageUrl;
+                        return (
+                          <div key={i} className="flex flex-col p-3 bg-amber-50 rounded-xl">
+                            {addOnImage ? (
+                              <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-amber-100 mb-2">
+                                <Image src={addOnImage} alt={addOnObj.name || 'Add-on'} fill className="object-cover" />
+                              </div>
+                            ) : (
+                              <div className="w-full aspect-[4/3] rounded-lg bg-amber-100 mb-2 flex items-center justify-center">
+                                <span className="text-2xl">✨</span>
+                              </div>
+                            )}
+                            <p className="font-medium text-gray-900 text-sm line-clamp-2">{addOnObj.name}</p>
+                            {addOnObj.price > 0 && (
+                              <p className="text-sm font-semibold text-amber-600 mt-1">
+                                +${typeof addOnObj.price === 'number' ? addOnObj.price.toFixed(2) : addOnObj.price}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+
+                // No images - show simple list
+                return (
+                  <div className="space-y-2">
+                    {addOns.map((item: any, i: number) => {
+                      const addOnObj = typeof item === 'string' ? { name: item } : item;
+                      return (
+                        <div key={i} className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
+                          <span className="text-sm text-gray-700">{addOnObj.name}</span>
+                          {addOnObj.price > 0 && (
+                            <span className="text-sm font-medium text-amber-600">+${addOnObj.price}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Package Rules */}
+          {rules.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4">
+                Selection Rules
+              </h2>
+              <div className="space-y-2">
+                {rules.map((rule: any, i: number) => {
+                  const ruleText = typeof rule === 'string' ? rule : rule.text || rule.description || rule.name;
+                  const requiredSelection = typeof rule === 'object' ? rule.requiredSelection : null;
+                  return (
+                    <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="w-8 h-8 rounded-full bg-[#44646c] flex items-center justify-center shrink-0">
+                        <span className="text-sm font-bold text-white">{requiredSelection || i + 1}</span>
+                      </div>
+                      <p className="text-sm text-gray-700 flex-1">{ruleText}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Book button */}
+          <div className="sticky bottom-0 bg-white pt-4 pb-6 border-t border-gray-100 -mx-4 px-4">
+            <button
+              onClick={onClose}
+              className="w-full bg-[#44646c] text-white font-semibold py-4 rounded-xl hover:bg-[#3a565d] transition-colors text-lg"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Menu Item Detail Modal */}
+      {selectedItem && (
+        <MenuItemDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+      )}
+    </>
   );
 }
 
@@ -273,8 +561,11 @@ export default function ProviderDetailPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
   const [selectedMenuType, setSelectedMenuType] = useState<'alacarte' | 'catering'>('alacarte');
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<CateringPackage | null>(null);
+  const [showAllHighlights, setShowAllHighlights] = useState(false);
+  const [showAllAlaCarteItems, setShowAllAlaCarteItems] = useState(false);
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   useEffect(() => {
     async function fetchProvider() {
@@ -283,6 +574,10 @@ export default function ProviderDetailPage() {
         if (res.ok) {
           const data = await res.json();
           setProvider(data.provider);
+          // Default to catering if no a la carte items
+          if (data.provider?.cateringPackages?.length > 0 && !data.provider?.aLaCarteMenu?.length) {
+            setSelectedMenuType('catering');
+          }
         }
       } catch (error) {
         console.error('Error fetching provider:', error);
@@ -290,81 +585,241 @@ export default function ProviderDetailPage() {
         setIsLoading(false);
       }
     }
-
-    if (params.id) {
-      fetchProvider();
-    }
+    if (params.id) fetchProvider();
   }, [params.id]);
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'FoodBeverage': return <Utensils className="w-5 h-5" />;
-      case 'Entertainment': return <Music className="w-5 h-5" />;
-      case 'Venues': return <Building2 className="w-5 h-5" />;
-      case 'Vendors': return <Package className="w-5 h-5" />;
-      default: return null;
-    }
-  };
-
-  const getCategoryLabel = (category: string) => {
-    switch (category) {
-      case 'FoodBeverage': return 'Catering';
-      case 'Entertainment': return 'Entertainment';
-      case 'Venues': return 'Venue';
-      case 'Vendors': return 'Vendor';
-      default: return category;
-    }
-  };
-
   if (isLoading) {
-    return <DetailSkeleton />;
+    return (
+      <div className="min-h-screen bg-white">
+        {/* Header Skeleton */}
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
+          <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse" />
+              <div className="w-12 h-4 bg-gray-200 rounded animate-pulse hidden sm:block" />
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-16 h-8 bg-gray-200 rounded-lg animate-pulse" />
+              <div className="w-16 h-8 bg-gray-200 rounded-lg animate-pulse" />
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-6xl mx-auto px-4 py-6">
+          {/* Title Skeleton */}
+          <div className="h-8 w-2/3 bg-gray-200 rounded animate-pulse mb-2" />
+
+          {/* Stats Row Skeleton */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
+            <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+          </div>
+
+          {/* Image Gallery Skeleton */}
+          <div className="grid grid-cols-4 gap-2 h-[280px] sm:h-[340px] rounded-xl overflow-hidden mb-6">
+            <div className="col-span-2 row-span-2 bg-gray-200 animate-pulse" />
+            <div className="bg-gray-200 animate-pulse" />
+            <div className="bg-gray-200 animate-pulse" />
+            <div className="bg-gray-200 animate-pulse" />
+            <div className="bg-gray-200 animate-pulse" />
+          </div>
+
+          {/* Content Grid Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Description Skeleton */}
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-full" />
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-full" />
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-gray-200" />
+
+              {/* Highlights Skeleton */}
+              <div className="space-y-4">
+                <div className="h-6 w-32 bg-gray-200 rounded animate-pulse" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse" />
+                      <div className="flex-1 space-y-1">
+                        <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                        <div className="h-3 w-32 bg-gray-200 rounded animate-pulse" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-gray-200" />
+
+              {/* Menu Section Skeleton */}
+              <div className="space-y-4">
+                <div className="h-6 w-24 bg-gray-200 rounded animate-pulse" />
+                <div className="flex gap-2">
+                  <div className="h-10 w-24 bg-gray-200 rounded-full animate-pulse" />
+                  <div className="h-10 w-32 bg-gray-200 rounded-full animate-pulse" />
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {[1, 2, 3, 4, 5, 6].map(i => (
+                    <div key={i} className="bg-gray-100 rounded-xl p-3">
+                      <div className="aspect-[4/3] bg-gray-200 rounded-lg animate-pulse mb-2" />
+                      <div className="h-4 w-full bg-gray-200 rounded animate-pulse mb-1" />
+                      <div className="h-3 w-2/3 bg-gray-200 rounded animate-pulse" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar Skeleton */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-20 bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+                <div className="h-8 w-24 bg-gray-200 rounded animate-pulse" />
+                <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
+                <div className="h-12 w-full bg-gray-200 rounded-xl animate-pulse" />
+                <div className="border-t border-gray-200 pt-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-4 w-28 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (!provider) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Provider not found</h1>
-          <p className="text-gray-500 mb-4">The provider you&apos;re looking for doesn&apos;t exist.</p>
-          <Link href="/" className="text-black underline hover:text-gray-700 font-medium">
-            Back to marketplace
-          </Link>
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Provider not found</h1>
+          <Link href="/" className="text-[#44646c] underline text-sm">Back to marketplace</Link>
         </div>
       </div>
     );
   }
 
-  const images = provider.imageUrls?.length > 0 ? provider.imageUrls :
-    provider.primaryImageUrl ? [provider.primaryImageUrl] : [];
-
+  const images = provider.imageUrls?.length > 0 ? provider.imageUrls : provider.primaryImageUrl ? [provider.primaryImageUrl] : [];
   const location = provider.city && provider.state ? `${provider.city}, ${provider.state}` : provider.city || provider.state || '';
 
-  const hasNonprofitFlexibility = provider.nonprofitFlexibility && (
-    provider.nonprofitFlexibility.reduceMinimum ||
-    provider.nonprofitFlexibility.waiveMinimum ||
-    provider.nonprofitFlexibility.discountedMenu ||
-    provider.nonprofitFlexibility.freeServices ||
-    provider.nonprofitFlexibility.reduceFee ||
-    provider.nonprofitFlexibility.waiveFee
-  );
+  const getCategoryIcon = (cat: string) => {
+    switch (cat) {
+      case 'FoodBeverage': return Utensils;
+      case 'Entertainment': return Music;
+      case 'Venues': return Building2;
+      case 'Vendors': return Package;
+      default: return Package;
+    }
+  };
 
-  const hasHighVolumePartner = provider.highVolumePartner && (
-    provider.highVolumePartner.reduceMinimum ||
-    provider.highVolumePartner.waiveMinimum ||
-    provider.highVolumePartner.packageDeals ||
-    provider.highVolumePartner.reduceFee
-  );
+  const getCategoryLabel = (cat: string) => {
+    switch (cat) {
+      case 'FoodBeverage': return 'Catering';
+      case 'Entertainment': return 'Entertainment';
+      case 'Venues': return 'Venue';
+      case 'Vendors': return 'Vendor';
+      default: return cat;
+    }
+  };
 
-  // Full-screen photo gallery modal
+  // Build highlights for the provider
+  const buildHighlights = () => {
+    const highlights: { icon: any; title: string; subtitle: string }[] = [];
+
+    if (provider.category === 'FoodBeverage') {
+      if (provider.cuisineTypes) {
+        highlights.push({ icon: Utensils, title: `${provider.cuisineTypes} Cuisine`, subtitle: 'Authentic flavors & dishes' });
+      }
+      if (provider.minimumGuarantee) {
+        highlights.push({ icon: DollarSign, title: `$${provider.minimumGuarantee} minimum`, subtitle: 'Minimum order requirement' });
+      }
+      if (provider.serviceStyle) {
+        highlights.push({ icon: Users, title: provider.serviceStyle, subtitle: 'Service style' });
+      }
+      if (provider.dietarySpecialties?.length) {
+        highlights.push({ icon: Leaf, title: provider.dietarySpecialties.join(', '), subtitle: 'Dietary accommodations available' });
+      }
+      if (provider.traits?.length) {
+        highlights.push({ icon: Sparkles, title: provider.traits.join(', '), subtitle: 'What makes this provider special' });
+      }
+    }
+
+    if (provider.category === 'Entertainment') {
+      if (provider.genres) {
+        highlights.push({ icon: Music, title: provider.genres, subtitle: 'Music genres' });
+      }
+      if (provider.performanceType) {
+        highlights.push({ icon: Star, title: provider.performanceType, subtitle: 'Performance type' });
+      }
+      if (provider.performanceLength) {
+        highlights.push({ icon: Clock, title: provider.performanceLength, subtitle: 'Typical performance length' });
+      }
+      if (provider.compensationFlatFee) {
+        highlights.push({ icon: DollarSign, title: `$${provider.compensationFlatFee} flat fee`, subtitle: 'Starting price' });
+      }
+    }
+
+    if (provider.category === 'Venues') {
+      if (provider.venueType) {
+        highlights.push({ icon: Building2, title: provider.venueType, subtitle: 'Venue type' });
+      }
+      if (provider.capacityStanding || provider.capacitySeated) {
+        const cap = provider.capacityStanding || provider.capacitySeated;
+        highlights.push({ icon: Users, title: `Up to ${cap} guests`, subtitle: provider.capacityStanding ? 'Standing capacity' : 'Seated capacity' });
+      }
+      if (provider.squareFootage) {
+        highlights.push({ icon: Grid3X3, title: `${provider.squareFootage} sq ft`, subtitle: 'Total space' });
+      }
+      if (provider.parking) {
+        highlights.push({ icon: Navigation, title: provider.parking, subtitle: 'Parking available' });
+      }
+    }
+
+    if (provider.category === 'Vendors') {
+      if (provider.productCategory) {
+        highlights.push({ icon: Package, title: provider.productCategory, subtitle: 'Product category' });
+      }
+      if (provider.inventoryModel) {
+        highlights.push({ icon: CheckCircle2, title: provider.inventoryModel, subtitle: 'Inventory model' });
+      }
+      if (provider.minimumOrderRequirement) {
+        highlights.push({ icon: DollarSign, title: `$${provider.minimumOrderRequirement} minimum`, subtitle: 'Minimum order' });
+      }
+    }
+
+    // Common highlights
+    if (provider.serviceRadius) {
+      highlights.push({ icon: Navigation, title: `${provider.serviceRadius} mile service area`, subtitle: 'Will travel to your event' });
+    }
+    if (provider.yearsInBusiness && provider.yearsInBusiness !== 'N/A') {
+      highlights.push({ icon: Award, title: `${provider.yearsInBusiness} years experience`, subtitle: 'Established business' });
+    }
+
+    return highlights;
+  };
+
+  const highlights = buildHighlights();
+  const visibleHighlights = showAllHighlights ? highlights : highlights.slice(0, 3);
+
+  // Photo gallery modal
   if (showAllPhotos) {
     return (
       <div className="fixed inset-0 bg-white z-50 overflow-auto">
         <div className="sticky top-0 bg-white border-b z-10">
           <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-            <button
-              onClick={() => setShowAllPhotos(false)}
-              className="flex items-center gap-2 text-gray-900 hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-            >
+            <button onClick={() => setShowAllPhotos(false)} className="flex items-center gap-2 hover:bg-gray-100 px-4 py-2 rounded-lg">
               <X className="w-5 h-5" />
               <span className="font-medium">Close</span>
             </button>
@@ -375,13 +830,7 @@ export default function ProviderDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {images.map((image, index) => (
               <div key={index} className={`relative ${index === 0 ? 'md:col-span-2 aspect-[16/9]' : 'aspect-square'} rounded-lg overflow-hidden`}>
-                <Image
-                  src={image}
-                  alt={`${provider.name} photo ${index + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
+                <Image src={image} alt={`Photo ${index + 1}`} fill className="object-cover" />
               </div>
             ))}
           </div>
@@ -394,142 +843,102 @@ export default function ProviderDetailPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
-          >
+        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+          <button onClick={() => router.back()} className="flex items-center gap-1 text-gray-700 hover:text-gray-900">
             <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium hidden sm:inline">Back</span>
+            <span className="text-sm font-medium hidden sm:inline">Back</span>
           </button>
-          <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors">
-              <Share2 className="w-5 h-5" />
-              <span className="font-medium underline hidden sm:inline">Share</span>
+          <div className="flex items-center gap-1">
+            <button className="flex items-center gap-1 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm">
+              <Share2 className="w-4 h-4" />
+              <span className="underline font-medium">Share</span>
             </button>
-            <button
-              onClick={() => setIsFavorite(!isFavorite)}
-              className="flex items-center gap-2 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
-            >
-              <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
-              <span className="font-medium underline hidden sm:inline">Save</span>
+            <button onClick={() => setIsFavorite(!isFavorite)} className="flex items-center gap-1 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm">
+              <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+              <span className="underline font-medium">Save</span>
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <main className="max-w-6xl mx-auto px-4 py-6">
         {/* Title */}
-        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-2">{provider.name}</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-1">{provider.name}</h1>
 
-        {/* Identity Tags */}
-        {provider.ownerIdentityTags && provider.ownerIdentityTags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {provider.ownerIdentityTags.map((tag, index) => (
-              <IdentityTag key={index} tag={tag} />
-            ))}
-          </div>
-        )}
+        {/* Quick stats row */}
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-4 flex-wrap">
+          {provider.rating && (
+            <span className="flex items-center gap-1">
+              <Star className="w-4 h-4 fill-black" />
+              <span className="font-medium text-gray-900">{provider.rating.toFixed(1)}</span>
+              {provider.reviewCount && <span>({provider.reviewCount} reviews)</span>}
+            </span>
+          )}
+          {provider.rating && location && <span className="text-gray-400">·</span>}
+          {location && <span>{location}</span>}
+        </div>
 
         {/* Image Gallery */}
-        <div className="relative mb-8">
+        <div className="relative mb-6">
           {images.length >= 5 ? (
-            <div className="grid grid-cols-4 gap-2 h-[300px] sm:h-[400px] rounded-xl overflow-hidden">
+            <div className="grid grid-cols-4 gap-2 h-[280px] sm:h-[340px] rounded-xl overflow-hidden">
               <div className="col-span-2 row-span-2 relative cursor-pointer" onClick={() => setShowAllPhotos(true)}>
-                <Image
-                  src={images[0]}
-                  alt={provider.name}
-                  fill
-                  className="object-cover hover:opacity-90 transition-opacity"
-                  priority
-                />
+                <Image src={images[0]} alt={provider.name} fill className="object-cover hover:opacity-95 transition-opacity" priority />
               </div>
               {images.slice(1, 5).map((image, index) => (
                 <div key={index} className="relative cursor-pointer" onClick={() => setShowAllPhotos(true)}>
-                  <Image
-                    src={image}
-                    alt={`${provider.name} ${index + 2}`}
-                    fill
-                    className="object-cover hover:opacity-90 transition-opacity"
-                  />
+                  <Image src={image} alt={`Photo ${index + 2}`} fill className="object-cover hover:opacity-95 transition-opacity" />
                 </div>
               ))}
             </div>
           ) : images.length > 0 ? (
-            <div className="relative h-[300px] sm:h-[400px] rounded-xl overflow-hidden cursor-pointer" onClick={() => setShowAllPhotos(true)}>
-              <Image
-                src={images[currentImageIndex]}
-                alt={provider.name}
-                fill
-                className="object-cover"
-                priority
-              />
+            <div className="relative h-[280px] sm:h-[340px] rounded-xl overflow-hidden">
+              <Image src={images[currentImageIndex]} alt={provider.name} fill className="object-cover" priority />
               {images.length > 1 && (
                 <>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length); }}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
-                  >
-                    <ChevronLeft className="w-5 h-5 text-gray-800" />
+                  <button onClick={() => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md">
+                    <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev + 1) % images.length); }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
-                  >
-                    <ChevronRight className="w-5 h-5 text-gray-800" />
+                  <button onClick={() => setCurrentImageIndex((prev) => (prev + 1) % images.length)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md">
+                    <ChevronRight className="w-4 h-4" />
                   </button>
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
-                    {images.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(index); }}
-                        className={`w-2 h-2 rounded-full transition-colors ${index === currentImageIndex ? 'bg-white' : 'bg-white/50'}`}
-                      />
-                    ))}
-                  </div>
                 </>
               )}
             </div>
           ) : (
-            <div className="h-[300px] sm:h-[400px] bg-gray-100 rounded-xl flex items-center justify-center">
-              <span className="text-gray-400">No images available</span>
+            <div className="h-[280px] bg-gray-100 rounded-xl flex items-center justify-center">
+              <span className="text-gray-400 text-sm">No images available</span>
             </div>
           )}
-
           {images.length > 1 && (
-            <button
-              onClick={() => setShowAllPhotos(true)}
-              className="absolute bottom-4 right-4 flex items-center gap-2 bg-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:bg-gray-50 transition-colors"
-            >
-              <Grid3X3 className="w-4 h-4" />
+            <button onClick={() => setShowAllPhotos(true)} className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg text-xs font-medium shadow-md hover:bg-gray-50">
+              <Grid3X3 className="w-3.5 h-3.5" />
               Show all photos
             </button>
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Category and location header */}
-            <div className="flex items-center justify-between pb-6 border-b">
+            {/* Category header */}
+            <div className="flex items-center justify-between pb-6 border-b border-gray-200">
               <div>
-                <div className="flex items-center gap-2 text-lg font-medium text-gray-900">
-                  {getCategoryIcon(provider.category)}
-                  <span>{getCategoryLabel(provider.category)}</span>
+                <div className="flex items-center gap-2 text-lg text-gray-900">
+                  {(() => { const Icon = getCategoryIcon(provider.category); return <Icon className="w-5 h-5" />; })()}
+                  <span className="font-medium">{getCategoryLabel(provider.category)}</span>
                   {location && (
                     <>
-                      <span className="text-gray-400">in</span>
-                      <span>{location}</span>
+                      <span className="text-gray-400 font-normal">in</span>
+                      <span className="font-normal">{location}</span>
                     </>
                   )}
                 </div>
-                <div className="flex items-center gap-3 mt-2 text-gray-600 flex-wrap">
-                  {provider.yearsInBusiness && provider.yearsInBusiness !== 'N/A' && (
-                    <span>{provider.yearsInBusiness} years experience</span>
-                  )}
+                <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 flex-wrap">
+                  {provider.yearsInBusiness && provider.yearsInBusiness !== 'N/A' && <span>{provider.yearsInBusiness}+ years experience</span>}
                   {provider.serviceRadius && provider.serviceRadius > 0 && (
                     <>
-                      <span className="w-1 h-1 bg-gray-400 rounded-full" />
+                      {provider.yearsInBusiness && <span className="w-1 h-1 bg-gray-400 rounded-full" />}
                       <span>{provider.serviceRadius} mile service area</span>
                     </>
                   )}
@@ -541,797 +950,554 @@ export default function ProviderDetailPage() {
                   )}
                 </div>
               </div>
-              {provider.rating && (
-                <div className="flex items-center gap-1 text-lg">
-                  <Star className="w-5 h-5 fill-black" />
-                  <span className="font-semibold">{provider.rating.toFixed(2)}</span>
-                  {provider.reviewCount && (
-                    <span className="text-gray-500 font-normal">({provider.reviewCount} reviews)</span>
-                  )}
-                </div>
-              )}
             </div>
 
-            {/* Community Support Badges */}
-            {(hasNonprofitFlexibility || hasHighVolumePartner) && (
-              <div className="py-6 border-b">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Community Support</h2>
-                <div className="flex flex-wrap gap-3">
-                  {hasNonprofitFlexibility && (
-                    <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
-                      <Heart className="w-5 h-5 text-green-600" />
-                      <div>
-                        <p className="font-medium text-green-900">Nonprofit Friendly</p>
-                        <p className="text-sm text-green-700">
-                          {provider.nonprofitFlexibility?.waiveMinimum || provider.nonprofitFlexibility?.waiveFee
-                            ? 'May waive minimums/fees'
-                            : provider.nonprofitFlexibility?.reduceMinimum || provider.nonprofitFlexibility?.reduceFee
-                            ? 'Offers reduced rates'
-                            : provider.nonprofitFlexibility?.discountedMenu || provider.nonprofitFlexibility?.discountPercentage
-                            ? `${provider.nonprofitFlexibility.discountPercentage || 'Special'} discount available`
-                            : 'Special pricing available'}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {hasHighVolumePartner && (
-                    <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
-                      <Users className="w-5 h-5 text-blue-600" />
-                      <div>
-                        <p className="font-medium text-blue-900">High Volume Partner</p>
-                        <p className="text-sm text-blue-700">
-                          {provider.highVolumePartner?.packageDeals
-                            ? 'Package deals available'
-                            : provider.highVolumePartner?.waiveMinimum
-                            ? 'May waive minimums'
-                            : 'Special rates for frequent bookings'}
-                        </p>
-                      </div>
-                    </div>
-                  )}
+            {/* Highlights Section (Airbnb style) */}
+            {highlights.length > 0 && (
+              <div className="py-6 border-b border-gray-200">
+                <div className="divide-y divide-gray-100">
+                  {visibleHighlights.map((h, i) => (
+                    <HighlightRow key={i} icon={h.icon} title={h.title} subtitle={h.subtitle} />
+                  ))}
                 </div>
+                {highlights.length > 3 && (
+                  <button
+                    onClick={() => setShowAllHighlights(!showAllHighlights)}
+                    className="flex items-center gap-1 mt-2 text-sm font-medium text-gray-900 underline"
+                  >
+                    {showAllHighlights ? 'Show less' : `Show all ${highlights.length} highlights`}
+                    {showAllHighlights ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                )}
               </div>
             )}
 
             {/* About Section */}
-            <div className="py-8 border-b">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">About {provider.name}</h2>
-              {(provider.bio || provider.description) ? (
-                <p className="text-gray-600 leading-relaxed whitespace-pre-line">{provider.bio || provider.description}</p>
-              ) : (
-                <p className="text-gray-600 leading-relaxed">
-                  {provider.category === 'FoodBeverage' && provider.cuisineTypes && (
-                    <>{provider.name} specializes in {provider.cuisineTypes} cuisine{provider.serviceStyle && `, offering ${provider.serviceStyle} service`}. {provider.specialFeatures && provider.specialFeatures.length > 0 && `Special features include ${provider.specialFeatures.join(', ')}.`}</>
-                  )}
-                  {provider.category === 'Entertainment' && (
-                    <>{provider.name} {provider.performanceType && `is a ${provider.performanceType}`}{provider.genres && ` performing ${provider.genres}`}. {provider.performanceLength && `Typical performance length is ${provider.performanceLength}.`} {provider.achievements && provider.achievements}</>
-                  )}
-                  {provider.category === 'Venues' && (
-                    <>{provider.name} is a {provider.venueType} venue{provider.squareFootage && ` with ${provider.squareFootage} sq ft of space`}. {provider.capacityStanding && `Can accommodate up to ${provider.capacityStanding} guests standing`}{provider.capacitySeated && ` or ${provider.capacitySeated} seated`}.</>
-                  )}
-                  {provider.category === 'Vendors' && provider.productCategory && (
-                    <>{provider.name} specializes in {provider.productCategory} products. {provider.productionType && `Production type: ${provider.productionType}.`}</>
-                  )}
-                </p>
-              )}
-            </div>
+            {(provider.bio || provider.description) && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">About {provider.name}</h2>
+                {(() => {
+                  const text = provider.bio || provider.description || '';
+                  const isLong = text.length > 300;
+                  const displayText = showFullDescription || !isLong ? text : text.slice(0, 300) + '...';
+                  return (
+                    <>
+                      <p className="text-gray-600 text-[15px] leading-relaxed whitespace-pre-line">{displayText}</p>
+                      {isLong && (
+                        <button
+                          onClick={() => setShowFullDescription(!showFullDescription)}
+                          className="mt-3 text-[15px] font-semibold text-gray-900 underline hover:text-gray-700 transition-colors"
+                        >
+                          {showFullDescription ? 'Show less' : 'Read more'}
+                        </button>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            )}
 
-            {/* Category-specific details */}
-            {provider.category === 'FoodBeverage' && (
-              <>
-                {/* Service Details */}
-                <div className="py-8 border-b">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Service Details</h2>
-                  <div className="grid grid-cols-2 gap-6">
-                    {provider.cuisineTypes && provider.cuisineTypes !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Cuisine Types</p>
-                        <p className="text-gray-900">{provider.cuisineTypes}</p>
-                      </div>
-                    )}
-                    {provider.serviceStyle && provider.serviceStyle !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Service Style</p>
-                        <p className="text-gray-900">{provider.serviceStyle}</p>
-                      </div>
-                    )}
-                    {provider.minimumGuarantee && provider.minimumGuarantee !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Minimum Guarantee</p>
-                        <p className="text-gray-900">${provider.minimumGuarantee}</p>
-                      </div>
-                    )}
-                    {provider.foodTruckDimensions && provider.foodTruckDimensions !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Food Truck Dimensions</p>
-                        <p className="text-gray-900">{provider.foodTruckDimensions}</p>
-                      </div>
-                    )}
+            {/* Menu Section (Food & Beverage) */}
+            {provider.category === 'FoodBeverage' && ((provider.aLaCarteMenu?.length || 0) > 0 || (provider.cateringPackages?.length || 0) > 0) && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Menu</h2>
+
+                {/* Menu Toggle */}
+                {(provider.aLaCarteMenu?.length || 0) > 0 && (provider.cateringPackages?.length || 0) > 0 && (
+                  <div className="flex bg-gray-100 rounded-lg p-1 mb-5 w-fit">
+                    <button
+                      onClick={() => setSelectedMenuType('alacarte')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${selectedMenuType === 'alacarte' ? 'bg-[#44646c] text-white' : 'text-gray-600'}`}
+                    >
+                      À La Carte
+                    </button>
+                    <button
+                      onClick={() => setSelectedMenuType('catering')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${selectedMenuType === 'catering' ? 'bg-[#44646c] text-white' : 'text-gray-600'}`}
+                    >
+                      Catering Packages
+                    </button>
                   </div>
+                )}
 
-                  {/* Dietary Specialties */}
-                  {provider.dietarySpecialties && provider.dietarySpecialties.length > 0 && (
-                    <div className="mt-6">
-                      <p className="text-sm text-gray-500 mb-2">Dietary Specialties</p>
-                      <div className="flex flex-wrap gap-2">
-                        {provider.dietarySpecialties.map((specialty, index) => (
-                          <span key={index} className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700">
-                            {specialty}
-                          </span>
+                {/* A La Carte */}
+                {selectedMenuType === 'alacarte' && provider.aLaCarteMenu && provider.aLaCarteMenu.length > 0 && (() => {
+                  const hasImages = provider.aLaCarteMenu.some(item => item.image || item.imageUrl);
+                  const displayedItems = showAllAlaCarteItems ? provider.aLaCarteMenu : provider.aLaCarteMenu.slice(0, hasImages ? 8 : 6);
+                  const remainingCount = provider.aLaCarteMenu.length - (hasImages ? 8 : 6);
+
+                  if (hasImages) {
+                    return (
+                      <div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                          {displayedItems.map((item, index) => {
+                            const itemImage = item.image || item.imageUrl;
+                            return (
+                              <div key={item.id || index} className="flex flex-col p-3 bg-gray-50 rounded-xl">
+                                {itemImage ? (
+                                  <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-gray-200 mb-2">
+                                    <Image src={itemImage} alt={item.name} fill className="object-cover" />
+                                  </div>
+                                ) : (
+                                  <div className="w-full aspect-[4/3] rounded-lg bg-gray-200 mb-2 flex items-center justify-center">
+                                    <Utensils className="w-8 h-8 text-gray-400" />
+                                  </div>
+                                )}
+                                <p className="font-medium text-gray-900 text-sm line-clamp-2">{item.name}</p>
+                                {item.description && (
+                                  <p className="text-xs text-gray-500 line-clamp-2 mt-1">{item.description}</p>
+                                )}
+                                {item.price > 0 && (
+                                  <p className="text-sm font-semibold text-[#44646c] mt-2">
+                                    ${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {remainingCount > 0 && !showAllAlaCarteItems && (
+                          <button
+                            onClick={() => setShowAllAlaCarteItems(true)}
+                            className="text-sm text-[#44646c] font-medium mt-4 hover:underline"
+                          >
+                            +{remainingCount} more items
+                          </button>
+                        )}
+                        {showAllAlaCarteItems && provider.aLaCarteMenu.length > 8 && (
+                          <button
+                            onClick={() => setShowAllAlaCarteItems(false)}
+                            className="text-sm text-[#44646c] font-medium mt-4 hover:underline"
+                          >
+                            Show less
+                          </button>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // No images - show list format
+                  return (
+                    <div className="space-y-3">
+                      {displayedItems.map((item, index) => (
+                        <div key={item.id || index} className="flex justify-between items-start py-2 border-b border-gray-100 last:border-0">
+                          <div className="flex-1 min-w-0 pr-4">
+                            <p className="font-medium text-gray-900 text-sm">{item.name}</p>
+                            {item.description && <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{item.description}</p>}
+                          </div>
+                          {item.price > 0 && (
+                            <span className="font-medium text-gray-900 text-sm">${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}</span>
+                          )}
+                        </div>
+                      ))}
+                      {remainingCount > 0 && !showAllAlaCarteItems && (
+                        <button
+                          onClick={() => setShowAllAlaCarteItems(true)}
+                          className="text-sm text-[#44646c] font-medium hover:underline"
+                        >
+                          +{remainingCount} more items
+                        </button>
+                      )}
+                      {showAllAlaCarteItems && provider.aLaCarteMenu.length > 6 && (
+                        <button
+                          onClick={() => setShowAllAlaCarteItems(false)}
+                          className="text-sm text-[#44646c] font-medium hover:underline"
+                        >
+                          Show less
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Catering Packages */}
+                {selectedMenuType === 'catering' && provider.cateringPackages && provider.cateringPackages.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {provider.cateringPackages.map((pkg, index) => (
+                      <CateringPackageCard
+                        key={pkg.id || index}
+                        pkg={pkg}
+                        onViewDetails={() => setSelectedPackage(pkg)}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Empty states */}
+                {selectedMenuType === 'alacarte' && (!provider.aLaCarteMenu || provider.aLaCarteMenu.length === 0) && (
+                  <p className="text-sm text-gray-500">No à la carte items available</p>
+                )}
+                {selectedMenuType === 'catering' && (!provider.cateringPackages || provider.cateringPackages.length === 0) && (
+                  <p className="text-sm text-gray-500">No catering packages available</p>
+                )}
+              </div>
+            )}
+
+            {/* Services Offered (for Vendors) */}
+            {provider.category === 'Vendors' && provider.serviceItems && provider.serviceItems.length > 0 && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Services Offered</h2>
+
+                {/* Category filter pills if there are multiple categories */}
+                {(() => {
+                  const categories = [...new Set(provider.serviceItems.map((s: any) => s.category).filter(Boolean))] as string[];
+                  if (categories.length > 1) {
+                    return (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <button className="px-4 py-2 rounded-full text-sm font-medium bg-[#44646c] text-white">
+                          All
+                        </button>
+                        {categories.map((cat, i) => (
+                          <button key={i} className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
+                            {cat}
+                          </button>
                         ))}
                       </div>
-                    </div>
-                  )}
-                </div>
+                    );
+                  }
+                  return null;
+                })()}
 
-                {/* Menu Section */}
-                {(provider.aLaCarteMenu && provider.aLaCarteMenu.length > 0) || (provider.cateringPackages && provider.cateringPackages.length > 0) || provider.menuAlaCarte || provider.menuCatering ? (
-                  <div className="py-8 border-b">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6">Menu</h2>
-                    <div className="flex bg-gray-100 rounded-lg p-1 mb-6 w-fit">
-                      <button
-                        onClick={() => setSelectedMenuType('alacarte')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                          selectedMenuType === 'alacarte' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                      >
-                        A la Carte
-                      </button>
-                      <button
-                        onClick={() => setSelectedMenuType('catering')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                          selectedMenuType === 'catering' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                      >
-                        Catering Packages
-                      </button>
-                    </div>
-
-                    {selectedMenuType === 'alacarte' ? (
-                      provider.aLaCarteMenu && provider.aLaCarteMenu.length > 0 ? (
-                        <div className="space-y-6">
-                          {/* Group items by category */}
-                          {(() => {
-                            const categories = [...new Set(provider.aLaCarteMenu.map(item => item.category || 'Other'))];
-                            return categories.map((category, catIndex) => (
-                              <div key={catIndex}>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-3">{category}</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  {provider.aLaCarteMenu!
-                                    .filter(item => (item.category || 'Other') === category)
-                                    .map((item, index) => (
-                                      <div key={item.id || index} className="flex gap-4 p-4 bg-gray-50 rounded-lg">
-                                        {item.image && (
-                                          <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
-                                            <Image src={item.image} alt={item.name} fill className="object-cover" />
-                                          </div>
-                                        )}
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex justify-between items-start">
-                                            <h4 className="font-medium text-gray-900">{item.name}</h4>
-                                            <span className="font-semibold text-gray-900 ml-2">${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}</span>
-                                          </div>
-                                          {item.description && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{item.description}</p>}
-                                          {item.dietaryBadges && item.dietaryBadges.length > 0 && (
-                                            <div className="flex flex-wrap gap-1 mt-2">
-                                              {item.dietaryBadges.map((badge, i) => (
-                                                <span key={i} className="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs">{badge}</span>
-                                              ))}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ))}
-                                </div>
-                              </div>
-                            ));
-                          })()}
-                        </div>
-                      ) : (
-                        <p className="text-gray-600">{provider.menuAlaCarte || 'Menu available upon request'}</p>
-                      )
-                    ) : (
-                      provider.cateringPackages && provider.cateringPackages.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {provider.cateringPackages.map((pkg, index) => (
-                            <div key={index} className="border rounded-xl overflow-hidden">
-                              {pkg.image && (
-                                <div className="relative h-40">
-                                  <Image src={pkg.image} alt={pkg.name} fill className="object-cover" />
-                                </div>
+                <div className="space-y-4">
+                  {provider.serviceItems.map((service: any, index: number) => {
+                    const serviceImage = service.image || service.photo || (service.photos && service.photos[0]);
+                    return (
+                      <div key={index} className="border border-gray-200 rounded-xl p-4">
+                        {serviceImage && (
+                          <button
+                            onClick={() => setFullScreenImage(serviceImage)}
+                            className="relative w-full h-48 rounded-lg overflow-hidden bg-gray-100 mb-4 block cursor-pointer group"
+                          >
+                            <Image src={serviceImage} alt={service.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                            {/* Click to view tag */}
+                            <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                              </svg>
+                              Click to view
+                            </div>
+                          </button>
+                        )}
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900">{service.name}</h3>
+                            {service.category && (
+                              <p className="text-xs text-gray-500 mt-0.5">{service.category}</p>
+                            )}
+                          </div>
+                          {service.price > 0 && (
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-gray-900">${typeof service.price === 'number' ? service.price.toLocaleString() : service.price}</p>
+                              {service.pricingUnit && (
+                                <p className="text-xs text-gray-500">{service.pricingUnit}</p>
                               )}
-                              <div className="p-4">
-                                <h4 className="font-semibold text-gray-900">{pkg.name}</h4>
-                                {pkg.description && <p className="text-sm text-gray-600 mt-1">{pkg.description}</p>}
-                                <p className="text-lg font-semibold text-gray-900 mt-2">Starting at ${pkg.basePrice}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-600">{provider.menuCatering || 'Catering menu available upon request'}</p>
-                      )
-                    )}
-                  </div>
-                ) : null}
-              </>
-            )}
-
-            {provider.category === 'Entertainment' && (
-              <>
-                {/* Performance Details */}
-                <div className="py-8 border-b">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Performance Details</h2>
-                  <div className="grid grid-cols-2 gap-6">
-                    {provider.genres && provider.genres !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Genres</p>
-                        <p className="text-gray-900">{provider.genres}</p>
-                      </div>
-                    )}
-                    {provider.performanceType && provider.performanceType !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Performance Type</p>
-                        <p className="text-gray-900">{provider.performanceType}</p>
-                      </div>
-                    )}
-                    {provider.performanceLength && provider.performanceLength !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Performance Length</p>
-                        <p className="text-gray-900">{provider.performanceLength}</p>
-                      </div>
-                    )}
-                    {provider.setupTime && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Setup Time</p>
-                        <p className="text-gray-900">{provider.setupTime}</p>
-                      </div>
-                    )}
-                    {provider.technicalRequirements && provider.technicalRequirements !== 'N/A' && (
-                      <div className="col-span-2">
-                        <p className="text-sm text-gray-500 mb-1">Technical Requirements</p>
-                        <p className="text-gray-900">{provider.technicalRequirements}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Specializations */}
-                  {provider.specializations && provider.specializations.length > 0 && (
-                    <div className="mt-6">
-                      <p className="text-sm text-gray-500 mb-2">Specializations</p>
-                      <div className="flex flex-wrap gap-2">
-                        {provider.specializations.map((spec, index) => (
-                          <span key={index} className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700">
-                            {spec}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Pricing */}
-                {(provider.compensationFlatFee || provider.compensationHourly) && (
-                  <div className="py-8 border-b">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6">Pricing</h2>
-                    <div className="grid grid-cols-2 gap-6">
-                      {provider.compensationFlatFee && provider.compensationFlatFee !== 'N/A' && (
-                        <div className="bg-gray-50 p-4 rounded-xl">
-                          <p className="text-sm text-gray-500 mb-1">Flat Fee</p>
-                          <p className="text-2xl font-semibold text-gray-900">${provider.compensationFlatFee}</p>
-                        </div>
-                      )}
-                      {provider.compensationHourly && provider.compensationHourly !== 'N/A' && (
-                        <div className="bg-gray-50 p-4 rounded-xl">
-                          <p className="text-sm text-gray-500 mb-1">Hourly Rate</p>
-                          <p className="text-2xl font-semibold text-gray-900">${provider.compensationHourly}<span className="text-base font-normal text-gray-500">/hour</span></p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Demo Media */}
-                {(provider.demoAudio || provider.performanceVideo) && (
-                  <div className="py-8 border-b">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6">Demo Media</h2>
-                    <div className="space-y-6">
-                      {provider.demoAudio && (
-                        <div className="bg-gray-50 p-4 rounded-xl">
-                          <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
-                            <Music className="w-4 h-4" />
-                            Demo Audio
-                          </p>
-                          <audio controls className="w-full">
-                            <source src={provider.demoAudio} type="audio/mpeg" />
-                            Your browser does not support the audio element.
-                          </audio>
-                        </div>
-                      )}
-                      {provider.performanceVideo && (
-                        <div className="bg-gray-50 p-4 rounded-xl">
-                          <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
-                            <Play className="w-4 h-4" />
-                            Performance Video
-                          </p>
-                          <video controls className="w-full rounded-lg aspect-video bg-black">
-                            <source src={provider.performanceVideo} type="video/mp4" />
-                            Your browser does not support the video element.
-                          </video>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Travel Info */}
-                {(provider.travelPolicy || provider.basedIn) && (
-                  <div className="py-8 border-b">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6">Travel Information</h2>
-                    <div className="grid grid-cols-2 gap-6">
-                      {provider.basedIn && (
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">Based In</p>
-                          <p className="text-gray-900">{provider.basedIn}</p>
-                        </div>
-                      )}
-                      {provider.travelPolicy && (
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">Travel Policy</p>
-                          <p className="text-gray-900">{provider.travelPolicy}</p>
-                        </div>
-                      )}
-                      {provider.travelNotes && (
-                        <div className="col-span-2">
-                          <p className="text-sm text-gray-500 mb-1">Travel Notes</p>
-                          <p className="text-gray-900">{provider.travelNotes}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {provider.category === 'Venues' && (
-              <>
-                {/* Venue Details */}
-                <div className="py-8 border-b">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Venue Details</h2>
-                  <div className="grid grid-cols-2 gap-6">
-                    {provider.venueType && provider.venueType !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Venue Type</p>
-                        <p className="text-gray-900">{provider.venueType}</p>
-                      </div>
-                    )}
-                    {provider.squareFootage && provider.squareFootage !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Square Footage</p>
-                        <p className="text-gray-900">{provider.squareFootage} sq ft</p>
-                      </div>
-                    )}
-                    {provider.capacitySeated && provider.capacitySeated !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Seated Capacity</p>
-                        <p className="text-gray-900">{provider.capacitySeated} guests</p>
-                      </div>
-                    )}
-                    {provider.capacityStanding && provider.capacityStanding !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Standing Capacity</p>
-                        <p className="text-gray-900">{provider.capacityStanding} guests</p>
-                      </div>
-                    )}
-                    {provider.layoutOptions && provider.layoutOptions !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Layout Options</p>
-                        <p className="text-gray-900">{provider.layoutOptions}</p>
-                      </div>
-                    )}
-                    {provider.parking && provider.parking !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Parking</p>
-                        <p className="text-gray-900">{provider.parking}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Venue Differentiators */}
-                  {(provider.historicLandmark || provider.waterfront || provider.rooftop || provider.uniqueArchitecture || provider.fullService || provider.blankCanvas || provider.ecoFriendly) && (
-                    <div className="mt-6">
-                      <p className="text-sm text-gray-500 mb-2">Special Features</p>
-                      <div className="flex flex-wrap gap-2">
-                        {provider.historicLandmark && (
-                          <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm">Historic Landmark</span>
-                        )}
-                        {provider.waterfront && (
-                          <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Waterfront</span>
-                        )}
-                        {provider.rooftop && (
-                          <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">Rooftop</span>
-                        )}
-                        {provider.uniqueArchitecture && (
-                          <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">Unique Architecture</span>
-                        )}
-                        {provider.fullService && (
-                          <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Full Service</span>
-                        )}
-                        {provider.blankCanvas && (
-                          <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Blank Canvas</span>
-                        )}
-                        {provider.ecoFriendly && (
-                          <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm flex items-center gap-1">
-                            <Leaf className="w-3 h-3" /> Eco-Friendly
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Amenities & Services */}
-                {(provider.amenities && provider.amenities.length > 0) || (provider.includedRentals && provider.includedRentals.length > 0) ? (
-                  <div className="py-8 border-b">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6">Amenities & Included Items</h2>
-                    {provider.amenities && provider.amenities.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-sm text-gray-500 mb-2">Amenities</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          {provider.amenities.map((amenity, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-green-600" />
-                              <span className="text-gray-700">{amenity}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {provider.includedRentals && provider.includedRentals.length > 0 && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-2">Included with Rental</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          {provider.includedRentals.map((item, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-green-600" />
-                              <span className="text-gray-700">{item}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : null}
-
-                {/* Policies */}
-                <div className="py-8 border-b">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Venue Policies</h2>
-                  <div className="space-y-4">
-                    {provider.kitchenAccess && (
-                      <div className="flex items-start gap-3">
-                        <Utensils className="w-5 h-5 text-gray-400 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-gray-900">Kitchen Access</p>
-                          <p className="text-gray-600">{provider.kitchenAccess}{provider.kitchenAccessDetails && ` - ${provider.kitchenAccessDetails}`}</p>
-                        </div>
-                      </div>
-                    )}
-                    {provider.alcoholPolicy && (
-                      <div className="flex items-start gap-3">
-                        <span className="text-gray-400 mt-0.5 text-lg">🍷</span>
-                        <div>
-                          <p className="font-medium text-gray-900">Alcohol Policy</p>
-                          <p className="text-gray-600">{provider.alcoholPolicy}{provider.alcoholPolicyDetails && ` - ${provider.alcoholPolicyDetails}`}</p>
-                        </div>
-                      </div>
-                    )}
-                    {provider.wifiAvailable && (
-                      <div className="flex items-start gap-3">
-                        <Wifi className="w-5 h-5 text-gray-400 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-gray-900">WiFi Available</p>
-                          {provider.wifiName && <p className="text-gray-600">Network: {provider.wifiName}</p>}
-                        </div>
-                      </div>
-                    )}
-                    {provider.noiseCurfew && (
-                      <div className="flex items-start gap-3">
-                        <Volume2 className="w-5 h-5 text-gray-400 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-gray-900">Noise Curfew</p>
-                          <p className="text-gray-600">{provider.noiseCurfew}{provider.noiseCurfewRestrictions && ` - ${provider.noiseCurfewRestrictions}`}</p>
-                        </div>
-                      </div>
-                    )}
-                    {provider.allowOutsideVendors !== undefined && (
-                      <div className="flex items-start gap-3">
-                        <Package className="w-5 h-5 text-gray-400 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-gray-900">Outside Vendors</p>
-                          <p className="text-gray-600">{provider.allowOutsideVendors ? 'Outside vendors allowed' : 'Must use preferred vendors'}</p>
-                        </div>
-                      </div>
-                    )}
-                    {provider.requiresInsurance && (
-                      <div className="flex items-start gap-3">
-                        <ShieldCheck className="w-5 h-5 text-gray-400 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-gray-900">Insurance Required</p>
-                          <p className="text-gray-600">{provider.insuranceLiabilityRequirements || 'Event insurance required'}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Pricing */}
-                {(provider.rentalFeeHourly || provider.rentalFeeFlat || provider.minimumSpendRequirement) && (
-                  <div className="py-8 border-b">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6">Pricing</h2>
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                      {provider.rentalFeeHourly && provider.rentalFeeHourly !== 'N/A' && (
-                        <div className="bg-gray-50 p-4 rounded-xl">
-                          <p className="text-sm text-gray-500 mb-1">Hourly Rate</p>
-                          <p className="text-2xl font-semibold text-gray-900">${provider.rentalFeeHourly}<span className="text-base font-normal text-gray-500">/hour</span></p>
-                          {provider.minimumHours && <p className="text-sm text-gray-500 mt-1">{provider.minimumHours} hour minimum</p>}
-                        </div>
-                      )}
-                      {provider.rentalFeeFlat && provider.rentalFeeFlat !== 'N/A' && (
-                        <div className="bg-gray-50 p-4 rounded-xl">
-                          <p className="text-sm text-gray-500 mb-1">Flat Fee</p>
-                          <p className="text-2xl font-semibold text-gray-900">${provider.rentalFeeFlat}</p>
-                        </div>
-                      )}
-                      {provider.minimumSpendRequirement && provider.minimumSpendRequirement !== 'N/A' && (
-                        <div className="bg-gray-50 p-4 rounded-xl">
-                          <p className="text-sm text-gray-500 mb-1">Minimum Spend</p>
-                          <p className="text-2xl font-semibold text-gray-900">${provider.minimumSpendRequirement}</p>
-                        </div>
-                      )}
-                      {provider.cleaningFeeAmount && (
-                        <div className="bg-gray-50 p-4 rounded-xl">
-                          <p className="text-sm text-gray-500 mb-1">Cleaning Fee</p>
-                          <p className="text-2xl font-semibold text-gray-900">${provider.cleaningFeeAmount}</p>
-                        </div>
-                      )}
-                      {provider.depositRequired && (
-                        <div className="bg-gray-50 p-4 rounded-xl">
-                          <p className="text-sm text-gray-500 mb-1">Deposit</p>
-                          <p className="text-2xl font-semibold text-gray-900">${provider.depositRequired}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {provider.category === 'Vendors' && (
-              <>
-                {/* Product Details */}
-                <div className="py-8 border-b">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Product Details</h2>
-                  <div className="grid grid-cols-2 gap-6">
-                    {provider.productCategory && provider.productCategory !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Product Category</p>
-                        <p className="text-gray-900">{provider.productCategory}</p>
-                      </div>
-                    )}
-                    {provider.productionType && provider.productionType !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Production Type</p>
-                        <p className="text-gray-900">{provider.productionType}</p>
-                      </div>
-                    )}
-                    {provider.averagePriceRange && provider.averagePriceRange !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Price Range</p>
-                        <p className="text-gray-900">{provider.averagePriceRange}</p>
-                      </div>
-                    )}
-                    {provider.inventoryModel && provider.inventoryModel !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Inventory Model</p>
-                        <p className="text-gray-900">{provider.inventoryModel}</p>
-                      </div>
-                    )}
-                    {provider.minimumOrderRequirement && provider.minimumOrderRequirement !== 'N/A' && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Minimum Order</p>
-                        <p className="text-gray-900">${provider.minimumOrderRequirement}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Products/Services List */}
-                {((provider.serviceItems && provider.serviceItems.length > 0) || (provider.productItems && provider.productItems.length > 0)) && (
-                  <div className="py-8 border-b">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6">Products & Services</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {provider.serviceItems?.map((item: any, index: number) => (
-                        <div key={`service-${index}`} className="border rounded-xl overflow-hidden">
-                          {item.photo && (
-                            <div className="relative h-40">
-                              <Image src={item.photo} alt={item.name || 'Service'} fill className="object-cover" />
                             </div>
                           )}
-                          <div className="p-4">
-                            <h4 className="font-semibold text-gray-900">{item.name}</h4>
-                            {item.description && <p className="text-sm text-gray-600 mt-1">{item.description}</p>}
-                            {item.price && <p className="text-lg font-semibold text-gray-900 mt-2">${item.price}</p>}
-                          </div>
                         </div>
-                      ))}
-                      {provider.productItems?.map((item: any, index: number) => (
-                        <div key={`product-${index}`} className="border rounded-xl overflow-hidden">
-                          {item.photo && (
-                            <div className="relative h-40">
-                              <Image src={item.photo} alt={item.name || 'Product'} fill className="object-cover" />
+                        {service.serviceDetails && (
+                          <p className="text-sm text-gray-600 mt-3 line-clamp-3">{service.serviceDetails}</p>
+                        )}
+                        {service.maxQuantity && (
+                          <p className="text-xs text-gray-500 mt-2">Max quantity: {service.maxQuantity}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Products (for Vendors) */}
+            {provider.category === 'Vendors' && provider.productItems && provider.productItems.length > 0 && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Products</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {provider.productItems.map((product: any, index: number) => {
+                    const productImage = product.image || product.photo || (product.photos && product.photos[0]);
+                    return (
+                      <div key={index} className="border border-gray-200 rounded-xl p-3">
+                        {productImage && (
+                          <button
+                            onClick={() => setFullScreenImage(productImage)}
+                            className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100 mb-3 block cursor-pointer group"
+                          >
+                            <Image src={productImage} alt={product.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                            <div className="absolute bottom-1.5 right-1.5 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                              </svg>
+                              View
                             </div>
-                          )}
-                          <div className="p-4">
-                            <h4 className="font-semibold text-gray-900">{item.name}</h4>
-                            {item.description && <p className="text-sm text-gray-600 mt-1">{item.description}</p>}
-                            {item.price && <p className="text-lg font-semibold text-gray-900 mt-2">${item.price}</p>}
-                          </div>
-                        </div>
-                      ))}
+                          </button>
+                        )}
+                        <h3 className="font-medium text-gray-900 text-sm">{product.name}</h3>
+                        {product.price > 0 && (
+                          <p className="text-sm font-semibold text-[#44646c] mt-1">${product.price}</p>
+                        )}
+                        {product.description && (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{product.description}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* What this place offers (amenities for venues) */}
+            {provider.category === 'Venues' && provider.amenities && provider.amenities.length > 0 && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">What this venue offers</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {provider.amenities.slice(0, 8).map((amenity, index) => (
+                    <div key={index} className="flex items-center gap-3 text-sm text-gray-700">
+                      <CheckCircle2 className="w-5 h-5 text-gray-500" />
+                      <span>{amenity}</span>
                     </div>
-                  </div>
+                  ))}
+                </div>
+                {provider.amenities.length > 8 && (
+                  <p className="text-sm text-gray-500 mt-3">+{provider.amenities.length - 8} more amenities</p>
                 )}
-              </>
+              </div>
             )}
 
             {/* Special Features */}
             {provider.specialFeatures && provider.specialFeatures.length > 0 && (
-              <div className="py-8 border-b">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">What this provider offers</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">What this provider offers</h2>
+                <div className="grid grid-cols-2 gap-3">
                   {provider.specialFeatures.map((feature, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <CheckCircle2 className="w-6 h-6 text-gray-900" />
-                      <span className="text-gray-700">{feature}</span>
+                    <div key={index} className="flex items-center gap-3 text-sm text-gray-700">
+                      <CheckCircle2 className="w-5 h-5 text-gray-500" />
+                      <span>{feature}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Cancellation Policy */}
-            {provider.cancellationPolicy && (
-              <div className="py-8 border-b">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Cancellation Policy</h2>
-                <p className="text-gray-600">{provider.cancellationPolicy}</p>
-                {provider.cancellationPolicyDetails && (
-                  <p className="text-gray-600 mt-2">{provider.cancellationPolicyDetails}</p>
-                )}
+            {/* Things to Know Section */}
+            {(provider.cancellationPolicy || provider.leadTimeRequired || provider.calendarAvailability) && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Things to know</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Cancellation Policy */}
+                  {provider.cancellationPolicy && (
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                        <X className="w-4 h-4" />
+                        Cancellation policy
+                      </h3>
+                      <p className="text-sm text-gray-600 capitalize">{provider.cancellationPolicy}</p>
+                      {provider.cancellationPolicy === 'flexible' && (
+                        <p className="text-xs text-gray-500 mt-1">Full refund 30+ days before event</p>
+                      )}
+                      {provider.cancellationPolicy === 'moderate' && (
+                        <p className="text-xs text-gray-500 mt-1">Full refund 60+ days before event</p>
+                      )}
+                      {provider.cancellationPolicy === 'strict' && (
+                        <p className="text-xs text-gray-500 mt-1">Full refund 90+ days before event</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Lead Time */}
+                  {provider.leadTimeRequired && (
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        Booking notice
+                      </h3>
+                      <p className="text-sm text-gray-600">{provider.leadTimeRequired} advance notice required</p>
+                    </div>
+                  )}
+
+                  {/* Availability */}
+                  {provider.calendarAvailability && (
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        Availability
+                      </h3>
+                      <p className="text-sm text-gray-600 capitalize">{provider.calendarAvailability}</p>
+                    </div>
+                  )}
+
+                  {/* Deposit (if available) */}
+                  {provider.depositPercentage && provider.depositPercentage > 0 && (
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        Deposit required
+                      </h3>
+                      <p className="text-sm text-gray-600">{provider.depositPercentage}% deposit to book</p>
+                      {provider.depositDueAtBooking && (
+                        <p className="text-xs text-gray-500 mt-1">Due {provider.depositDueAtBooking}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Service Area Map Section */}
+            {provider.serviceRadius && provider.serviceRadius > 0 && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Service area</h2>
+                <div className="h-[300px] rounded-xl overflow-hidden">
+                  <ServiceAreaMap
+                    lat={provider.lat}
+                    lng={provider.lng}
+                    serviceRadius={provider.serviceRadius}
+                    providerName={provider.name}
+                    city={provider.city}
+                    state={provider.state}
+                  />
+                </div>
               </div>
             )}
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar - Booking Card */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 border border-gray-200 rounded-xl p-6 shadow-lg">
-              {/* Price highlight */}
-              {provider.category === 'Entertainment' && provider.compensationFlatFee && provider.compensationFlatFee !== 'N/A' && (
-                <div className="mb-4">
-                  <span className="text-2xl font-semibold">${provider.compensationFlatFee}</span>
-                  <span className="text-gray-500"> flat fee</span>
-                </div>
-              )}
-              {provider.category === 'Venues' && provider.rentalFeeHourly && provider.rentalFeeHourly !== 'N/A' && (
-                <div className="mb-4">
-                  <span className="text-2xl font-semibold">${provider.rentalFeeHourly}</span>
-                  <span className="text-gray-500"> / hour</span>
-                </div>
-              )}
-              {provider.category === 'FoodBeverage' && provider.minimumGuarantee && provider.minimumGuarantee !== 'N/A' && (
-                <div className="mb-4">
-                  <span className="text-2xl font-semibold">${provider.minimumGuarantee}</span>
-                  <span className="text-gray-500"> minimum</span>
-                </div>
-              )}
-
-              <button className="w-full bg-black text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-800 transition-all mb-3">
-                Request Quote
-              </button>
-              <button className="w-full border border-gray-900 text-gray-900 font-semibold py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors mb-6">
-                Message Provider
-              </button>
-
-              <div className="border-t pt-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Contact Information</h3>
-                <div className="space-y-4">
-                  {provider.phone && provider.phone !== 'N/A' && (
-                    <a href={`tel:${provider.phone}`} className="flex items-center gap-3 text-gray-700 hover:text-gray-900 group">
-                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-gray-200 transition-colors">
-                        <Phone className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Phone</p>
-                        <p className="text-sm font-medium">{provider.phone}</p>
-                      </div>
-                    </a>
-                  )}
-                  {provider.email && provider.email !== 'N/A' && (
-                    <a href={`mailto:${provider.email}`} className="flex items-center gap-3 text-gray-700 hover:text-gray-900 group">
-                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-gray-200 transition-colors">
-                        <Mail className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Email</p>
-                        <p className="text-sm font-medium truncate max-w-[180px]">{provider.email}</p>
-                      </div>
-                    </a>
-                  )}
-                  {provider.website && provider.website !== 'N/A' && (
-                    <a
-                      href={provider.website.startsWith('http') ? provider.website : `https://${provider.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 text-gray-700 hover:text-gray-900 group"
-                    >
-                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-gray-200 transition-colors">
-                        <Globe className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Website</p>
-                        <p className="text-sm font-medium text-black underline">Visit website</p>
-                      </div>
-                    </a>
-                  )}
-                  {provider.address && provider.address !== 'N/A' && (
-                    <div className="flex items-center gap-3 text-gray-700">
-                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                        <MapPin className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Location</p>
-                        <p className="text-sm font-medium">{provider.address}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Social Media Links */}
-                {provider.socialMedia && (provider.socialMedia.instagram || provider.socialMedia.facebook || provider.socialMedia.twitter || provider.socialMedia.youtube) && (
-                  <div className="mt-6 pt-6 border-t">
-                    <p className="text-xs text-gray-500 mb-3">Social Media</p>
-                    <div className="flex gap-3">
-                      {provider.socialMedia.instagram && (
-                        <a href={provider.socialMedia.instagram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
-                          <Instagram className="w-5 h-5 text-gray-700" />
-                        </a>
-                      )}
-                      {provider.socialMedia.facebook && (
-                        <a href={provider.socialMedia.facebook} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
-                          <Facebook className="w-5 h-5 text-gray-700" />
-                        </a>
-                      )}
-                      {provider.socialMedia.twitter && (
-                        <a href={provider.socialMedia.twitter} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
-                          <Twitter className="w-5 h-5 text-gray-700" />
-                        </a>
-                      )}
-                      {provider.socialMedia.youtube && (
-                        <a href={provider.socialMedia.youtube} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
-                          <Youtube className="w-5 h-5 text-gray-700" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
+            <div className="sticky top-20 border border-gray-200 rounded-xl p-5 shadow-lg">
+              {/* Price */}
+              <div className="mb-4">
+                {provider.category === 'FoodBeverage' && provider.minimumGuarantee && (
+                  <>
+                    <span className="text-xl font-semibold">${provider.minimumGuarantee}</span>
+                    <span className="text-gray-500 text-sm"> minimum</span>
+                  </>
+                )}
+                {provider.category === 'Entertainment' && provider.compensationFlatFee && (
+                  <>
+                    <span className="text-xl font-semibold">${provider.compensationFlatFee}</span>
+                    <span className="text-gray-500 text-sm"> starting</span>
+                  </>
+                )}
+                {provider.category === 'Venues' && (provider.rentalFeeHourly || provider.rentalFeeFlat) && (
+                  <>
+                    <span className="text-xl font-semibold">${provider.rentalFeeHourly || provider.rentalFeeFlat}</span>
+                    <span className="text-gray-500 text-sm">{provider.rentalFeeHourly ? ' /hour' : ' flat'}</span>
+                  </>
+                )}
+                {provider.category === 'Vendors' && provider.minimumOrderRequirement && (
+                  <>
+                    <span className="text-xl font-semibold">${provider.minimumOrderRequirement}</span>
+                    <span className="text-gray-500 text-sm"> minimum order</span>
+                  </>
                 )}
               </div>
 
-              <p className="text-center text-xs text-gray-500 mt-6">
-                You won&apos;t be charged yet
-              </p>
+              <button className="w-full bg-[#44646c] text-white font-semibold py-3 px-4 rounded-lg hover:bg-[#3a565d] transition-colors mb-3">
+                Book
+              </button>
+              <button className="w-full border border-gray-300 text-gray-900 font-semibold py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors mb-4">
+                Message Provider
+              </button>
+
+              <p className="text-center text-xs text-gray-500 mb-5">You won&apos;t be charged yet</p>
+
+              {/* Contact Information - Blurred */}
+              <div className="border-t pt-5">
+                <h3 className="font-semibold text-gray-900 text-sm mb-3">Contact Information</h3>
+                <div className="relative">
+                  <div className="space-y-3 blur-sm select-none pointer-events-none">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                        <Phone className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400">Phone</p>
+                        <p className="text-sm">(555) 123-4567</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                        <Mail className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400">Email</p>
+                        <p className="text-sm">contact@example.com</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/60 rounded-lg">
+                    <div className="text-center">
+                      <Lock className="w-5 h-5 text-gray-400 mx-auto mb-1" />
+                      <p className="text-xs text-gray-500 font-medium">Available after booking</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Media */}
+              {provider.socialMedia && (provider.socialMedia.instagram || provider.socialMedia.facebook) && (
+                <div className="mt-5 pt-5 border-t">
+                  <p className="text-xs text-gray-500 mb-2">Follow on social</p>
+                  <div className="flex gap-2">
+                    {provider.socialMedia.instagram && (
+                      <a href={provider.socialMedia.instagram} target="_blank" rel="noopener noreferrer" className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200">
+                        <Instagram className="w-4 h-4 text-gray-600" />
+                      </a>
+                    )}
+                    {provider.socialMedia.facebook && (
+                      <a href={provider.socialMedia.facebook} target="_blank" rel="noopener noreferrer" className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200">
+                        <Facebook className="w-4 h-4 text-gray-600" />
+                      </a>
+                    )}
+                    {provider.socialMedia.twitter && (
+                      <a href={provider.socialMedia.twitter} target="_blank" rel="noopener noreferrer" className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200">
+                        <Twitter className="w-4 h-4 text-gray-600" />
+                      </a>
+                    )}
+                    {provider.socialMedia.youtube && (
+                      <a href={provider.socialMedia.youtube} target="_blank" rel="noopener noreferrer" className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200">
+                        <Youtube className="w-4 h-4 text-gray-600" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </main>
+
+      {/* Package Detail Modal */}
+      {selectedPackage && (
+        <PackageDetailModal pkg={selectedPackage} onClose={() => setSelectedPackage(null)} />
+      )}
+
+      {/* Full Screen Image Modal */}
+      {fullScreenImage && (
+        <div className="fixed inset-0 z-[70] bg-black flex items-center justify-center">
+          {/* Close button */}
+          <button
+            onClick={() => setFullScreenImage(null)}
+            className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
+          >
+            <X className="w-6 h-6 text-white" />
+          </button>
+
+          {/* Image */}
+          <div className="relative w-full h-full max-w-5xl max-h-[90vh] m-4">
+            <Image
+              src={fullScreenImage}
+              alt="Full screen view"
+              fill
+              className="object-contain"
+            />
+          </div>
+
+          {/* Click outside to close */}
+          <div
+            className="absolute inset-0 -z-10"
+            onClick={() => setFullScreenImage(null)}
+          />
+        </div>
+      )}
     </div>
   );
 }

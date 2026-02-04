@@ -1,11 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, SlidersHorizontal, Star, Heart, ChevronLeft, ChevronRight, Globe, Menu } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, SlidersHorizontal, Star, Heart, ChevronLeft, ChevronRight, Globe, Menu, User, LogOut, Settings, Megaphone, Check, LayoutDashboard } from 'lucide-react';
 import type { Provider, ProviderCategory } from '@/types';
 import { getProviderDisplayName, getProviderImage, getProviderLocation } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { AuthModal } from '@/components/auth/AuthModal';
+import { HostAuthModal } from '@/components/auth/HostAuthModal';
+import { Footer } from '@/components/layout/Footer';
 
 // Loading Skeleton Component - Responsive size
 function ProviderCardSkeleton() {
@@ -197,11 +202,74 @@ function ProviderCard({
   );
 }
 
+const languages = [
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'pt', name: 'Português', flag: '🇧🇷' },
+  { code: 'zh', name: '中文', flag: '🇨🇳' },
+];
+
 export default function MarketplacePage() {
+  const router = useRouter();
+  const { user, signOut, isProvider } = useAuth();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [providers, setProviders] = useState<Provider[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showHostAuthModal, setShowHostAuthModal] = useState(false);
+  const [pendingFavoriteId, setPendingFavoriteId] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const languageRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // Track scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleBecomeProvider = () => {
+    if (user) {
+      // Already logged in, go to dashboard
+      router.push('/provider/dashboard');
+    } else {
+      // Show auth modal
+      setShowAuthModal(true);
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    // After successful auth, redirect to provider dashboard
+    router.push('/provider/dashboard');
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    setShowProfileDropdown(false);
+  };
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (languageRef.current && !languageRef.current.contains(event.target as Node)) {
+        setShowLanguageDropdown(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setShowProfileDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Fetch only active providers
   useEffect(() => {
@@ -230,6 +298,13 @@ export default function MarketplacePage() {
       });
 
   const toggleFavorite = (id: string) => {
+    // If user is not logged in, show auth modal
+    if (!user) {
+      setPendingFavoriteId(id);
+      setShowHostAuthModal(true);
+      return;
+    }
+
     setFavorites(prev => {
       const newFavorites = new Set(prev);
       if (newFavorites.has(id)) {
@@ -241,191 +316,306 @@ export default function MarketplacePage() {
     });
   };
 
+  const handleHostAuthSuccess = () => {
+    // After successful login, complete the pending favorite action
+    if (pendingFavoriteId) {
+      setFavorites(prev => {
+        const newFavorites = new Set(prev);
+        newFavorites.add(pendingFavoriteId);
+        return newFavorites;
+      });
+      setPendingFavoriteId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
+      {/* Combined Header - Condensed when scrolled */}
+      <header className="sticky top-0 z-30 bg-white border-b border-gray-200 transition-all duration-200">
         <div className="px-4 sm:px-6 lg:px-10 xl:px-20">
-          <div className="flex items-center justify-between h-16 md:h-20">
+          {/* Main header row */}
+          <div className={`flex items-center justify-between transition-all duration-200 ${isScrolled ? 'h-14' : 'h-16 md:h-20'}`}>
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3">
+            <Link href="/" className="flex items-center shrink-0">
               <Image
                 src="/eventini-logo.png"
                 alt="Eventini"
-                width={72}
-                height={72}
-                className="object-contain"
+                width={isScrolled ? 40 : 56}
+                height={isScrolled ? 40 : 56}
+                className="object-contain transition-all duration-200"
               />
-              <span className="text-3xl font-bold hidden sm:block" style={{ color: '#44646c' }}>
-                Eventini
-              </span>
             </Link>
 
-            {/* Search Bar */}
-            <button className="flex items-center gap-2 border border-gray-300 rounded-full px-4 py-2 shadow-sm hover:shadow-md transition-shadow max-w-md flex-1 mx-4 md:mx-8">
-              <Search className="w-4 h-4 text-gray-700" />
-              <div className="hidden sm:flex items-center gap-2 text-sm flex-1">
-                <span className="font-medium text-gray-900">Anywhere</span>
-                <span className="text-gray-300">|</span>
-                <span className="font-medium text-gray-900">Any date</span>
-                <span className="text-gray-300">|</span>
-                <span className="text-gray-400">Add guests</span>
-              </div>
-              <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center ml-auto">
-                <Search className="w-4 h-4 text-white" />
-              </div>
-            </button>
-
-            {/* Right side */}
-            <div className="flex items-center gap-2">
-              <button className="hidden lg:flex text-sm font-medium text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-full transition-colors">
-                Become a provider
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors hidden md:flex">
-                <Globe className="w-5 h-5 text-gray-700" />
-              </button>
-              <button className="flex items-center gap-2 border border-gray-300 rounded-full p-2 hover:shadow-md transition-shadow">
-                <Menu className="w-4 h-4 text-gray-700" />
-                <div className="w-7 h-7 bg-gray-600 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                  </svg>
+            {/* Center Section - Search bar (condensed when scrolled) */}
+            <div className="flex-1 flex justify-center px-4 md:px-8">
+              <button className={`flex items-center border border-gray-300 rounded-full shadow-sm hover:shadow-md transition-all bg-white ${isScrolled ? 'px-1.5 py-1 max-w-sm' : 'px-2 py-1.5 max-w-xl'} w-full`}>
+                <div className="flex items-center divide-x divide-gray-200 flex-1">
+                  <div className={isScrolled ? 'px-3 py-0.5' : 'px-4 py-1'}>
+                    <span className={`font-medium text-gray-900 ${isScrolled ? 'text-xs' : 'text-sm'}`}>Anywhere</span>
+                  </div>
+                  <div className={`hidden sm:block ${isScrolled ? 'px-3 py-0.5' : 'px-4 py-1'}`}>
+                    <span className={`font-medium text-gray-900 ${isScrolled ? 'text-xs' : 'text-sm'}`}>Any date</span>
+                  </div>
+                  <div className={`flex-1 hidden md:block ${isScrolled ? 'px-3 py-0.5' : 'px-4 py-1'}`}>
+                    <span className={`text-gray-400 ${isScrolled ? 'text-xs' : 'text-sm'}`}>Plan your event</span>
+                  </div>
+                </div>
+                <div className={`bg-[#44646c] rounded-full flex items-center justify-center shrink-0 ${isScrolled ? 'w-6 h-6' : 'w-8 h-8'}`}>
+                  <Search className={`text-white ${isScrolled ? 'w-3 h-3' : 'w-4 h-4'}`} />
                 </div>
               </button>
+            </div>
+
+            {/* Right side */}
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                onClick={handleBecomeProvider}
+                className={`hidden lg:flex text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-full transition-colors whitespace-nowrap ${isScrolled ? 'px-3 py-2 text-xs' : 'px-4 py-2.5'}`}
+              >
+                {user ? 'Dashboard' : 'Become a provider'}
+              </button>
+
+              {/* Language Dropdown */}
+              <div className="relative" ref={languageRef}>
+                <button
+                  onClick={() => {
+                    setShowLanguageDropdown(!showLanguageDropdown);
+                    setShowProfileDropdown(false);
+                  }}
+                  className={`hover:bg-gray-100 rounded-full transition-colors hidden md:flex ${isScrolled ? 'p-2' : 'p-2.5'}`}
+                >
+                  <Globe className={`text-gray-700 ${isScrolled ? 'w-4 h-4' : 'w-5 h-5'}`} />
+                </button>
+                {showLanguageDropdown && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Language</span>
+                    </div>
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          setSelectedLanguage(lang.code);
+                          setShowLanguageDropdown(false);
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">{lang.flag}</span>
+                          <span className="text-sm text-gray-700">{lang.name}</span>
+                        </div>
+                        {selectedLanguage === lang.code && (
+                          <Check className="w-4 h-4 text-[#44646c]" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Profile Dropdown */}
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => {
+                    setShowProfileDropdown(!showProfileDropdown);
+                    setShowLanguageDropdown(false);
+                  }}
+                  className={`flex items-center gap-2 border border-gray-300 rounded-full hover:shadow-md transition-all ${isScrolled ? 'p-1 pl-2' : 'p-1.5 pl-3'}`}
+                >
+                  <Menu className={`text-gray-600 ${isScrolled ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                  {user?.photoURL ? (
+                    <Image
+                      src={user.photoURL}
+                      alt={user.displayName || 'User'}
+                      width={isScrolled ? 28 : 32}
+                      height={isScrolled ? 28 : 32}
+                      className="rounded-full"
+                    />
+                  ) : (
+                    <div className={`bg-gray-500 rounded-full flex items-center justify-center ${isScrolled ? 'w-7 h-7' : 'w-8 h-8'}`}>
+                      <User className={`text-white ${isScrolled ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                    </div>
+                  )}
+                </button>
+                {showProfileDropdown && (
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                    {user ? (
+                      <>
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-sm font-semibold text-gray-900">{user.displayName || 'User'}</p>
+                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        </div>
+                        <div className="py-1">
+                          <Link
+                            href="/provider/dashboard"
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                            onClick={() => setShowProfileDropdown(false)}
+                          >
+                            <LayoutDashboard className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm text-gray-700">Provider Dashboard</span>
+                          </Link>
+                          <button
+                            onClick={() => setShowAuthModal(true)}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                          >
+                            <Megaphone className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm text-gray-700">Promote</span>
+                          </button>
+                          <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left">
+                            <Settings className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm text-gray-700">Settings</span>
+                          </button>
+                        </div>
+                        <div className="border-t border-gray-100 py-1">
+                          <button
+                            onClick={handleSignOut}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                          >
+                            <LogOut className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm text-gray-700">Sign out</span>
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-sm font-semibold text-gray-900">Guest</p>
+                          <p className="text-xs text-gray-500">Sign in to access all features</p>
+                        </div>
+                        <div className="py-1">
+                          <button
+                            onClick={() => {
+                              setShowAuthModal(true);
+                              setShowProfileDropdown(false);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                          >
+                            <Megaphone className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm text-gray-700">Promote</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowHostAuthModal(true);
+                              setShowProfileDropdown(false);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                          >
+                            <User className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm text-gray-700">Sign up</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowHostAuthModal(true);
+                              setShowProfileDropdown(false);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                          >
+                            <LogOut className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm text-gray-700">Log in</span>
+                          </button>
+                        </div>
+                        <div className="border-t border-gray-100 py-1">
+                          <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left">
+                            <Settings className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm text-gray-700">Settings</span>
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Category Tabs */}
-      <div className="sticky top-16 md:top-20 z-20 bg-white border-b border-gray-100">
+      {/* Category Tabs - Only show when not scrolled */}
+      <div className={`bg-white border-b border-gray-200 shadow-sm transition-all duration-200 ${isScrolled ? 'h-0 overflow-hidden opacity-0' : 'opacity-100'}`}>
         <div className="px-4 sm:px-6 lg:px-10 xl:px-20">
-          <div className="flex items-center gap-8 md:gap-10 py-3 overflow-x-auto scrollbar-hide">
-            {categories.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`flex flex-col items-center justify-center gap-1.5 min-w-[56px] py-2 border-b-2 transition-all ${
-                  activeCategory === cat.id
-                    ? 'border-gray-900 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300'
-                }`}
-              >
-                <span className={`flex items-center justify-center ${activeCategory === cat.id ? 'text-gray-900' : 'text-gray-400'}`}>
-                  {cat.icon}
-                </span>
-                <span className="text-xs font-medium whitespace-nowrap">{cat.name}</span>
-              </button>
-            ))}
+          <div className="flex items-center py-4">
+            {/* Categories */}
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-1 pr-4">
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all whitespace-nowrap ${
+                    activeCategory === cat.id
+                      ? 'bg-[#44646c] text-white shadow-md'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <span className={`flex items-center justify-center [&>svg]:w-5 [&>svg]:h-5 ${activeCategory === cat.id ? 'text-white' : 'text-gray-500'}`}>
+                    {cat.icon}
+                  </span>
+                  <span className="text-sm font-medium">{cat.name}</span>
+                </button>
+              ))}
+            </div>
 
             {/* Filters button */}
-            <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-xl ml-auto shrink-0 hover:bg-gray-50 transition-colors">
-              <SlidersHorizontal className="w-4 h-4" />
-              <span className="text-sm font-medium">Filters</span>
+            <button className="flex items-center gap-2 px-5 py-2.5 border-2 border-gray-300 rounded-full shrink-0 hover:border-gray-400 hover:bg-gray-50 transition-all ml-4">
+              <SlidersHorizontal className="w-4 h-4 text-gray-600" />
+              <span className="text-sm font-semibold text-gray-700">Filters</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Provider Grid - Full width responsive grid */}
-      <main className="px-4 sm:px-6 lg:px-10 xl:px-20 py-6 flex-1">
-        {isLoading ? (
-          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-10 gap-x-3 gap-y-5">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(i => (
-              <ProviderCardSkeleton key={i} />
-            ))}
-          </div>
-        ) : filteredProviders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <Search className="w-8 h-8 text-gray-400" />
+      {/* Provider Grid - 7 columns max, centered */}
+      <main className="py-6 flex-1">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
+          {isLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-x-5 gap-y-8">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(i => (
+                <ProviderCardSkeleton key={i} />
+              ))}
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No providers found</h3>
-            <p className="text-gray-500 max-w-sm">
-              We couldn&apos;t find any providers in this category. Try selecting a different category.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-10 gap-x-3 gap-y-5">
-            {filteredProviders.map(provider => (
-              <ProviderCard
-                key={provider.id}
-                provider={provider}
-                isFavorite={favorites.has(provider.id)}
-                onToggleFavorite={() => toggleFavorite(provider.id)}
-              />
-            ))}
-          </div>
-        )}
+          ) : filteredProviders.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <Search className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No providers found</h3>
+              <p className="text-gray-500 max-w-sm">
+                We couldn&apos;t find any providers in this category. Try selecting a different category.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-x-5 gap-y-8">
+              {filteredProviders.map(provider => (
+                <ProviderCard
+                  key={provider.id}
+                  provider={provider}
+                  isFavorite={favorites.has(provider.id)}
+                  onToggleFavorite={() => toggleFavorite(provider.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 bg-gray-50 mt-auto">
-        <div className="px-4 sm:px-6 lg:px-10 xl:px-20 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            {/* Brand */}
-            <div className="md:col-span-1">
-              <div className="flex items-center gap-3 mb-4">
-                <Image
-                  src="/eventini-logo.png"
-                  alt="Eventini"
-                  width={56}
-                  height={56}
-                  className="object-contain"
-                />
-                <span className="text-2xl font-bold" style={{ color: '#44646c' }}>
-                  Eventini
-                </span>
-              </div>
-              <p className="text-sm text-gray-500">
-                Find the perfect vendors for your next event. From catering to entertainment, we&apos;ve got you covered.
-              </p>
-            </div>
+      <Footer />
 
-            {/* Support */}
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Support</h4>
-              <ul className="space-y-3 text-sm text-gray-600">
-                <li><a href="#" className="hover:text-gray-900 hover:underline">Help Center</a></li>
-                <li><a href="#" className="hover:text-gray-900 hover:underline">Safety Information</a></li>
-                <li><a href="#" className="hover:text-gray-900 hover:underline">Cancellation Options</a></li>
-              </ul>
-            </div>
+      {/* Auth Modal for Providers */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
+      />
 
-            {/* Providers */}
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Providers</h4>
-              <ul className="space-y-3 text-sm text-gray-600">
-                <li><a href="#" className="hover:text-gray-900 hover:underline">Become a Provider</a></li>
-                <li><a href="#" className="hover:text-gray-900 hover:underline">Provider Resources</a></li>
-                <li><a href="#" className="hover:text-gray-900 hover:underline">Community Forum</a></li>
-              </ul>
-            </div>
-
-            {/* Company */}
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Eventini</h4>
-              <ul className="space-y-3 text-sm text-gray-600">
-                <li><a href="#" className="hover:text-gray-900 hover:underline">About Us</a></li>
-                <li><a href="#" className="hover:text-gray-900 hover:underline">Careers</a></li>
-                <li><a href="#" className="hover:text-gray-900 hover:underline">Press</a></li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Bottom bar */}
-          <div className="pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-gray-500">
-              © 2024 Eventini, Inc. All rights reserved.
-            </p>
-            <div className="flex items-center gap-6 text-sm text-gray-600">
-              <a href="#" className="hover:text-gray-900 hover:underline">Privacy</a>
-              <a href="#" className="hover:text-gray-900 hover:underline">Terms</a>
-              <a href="#" className="hover:text-gray-900 hover:underline">Sitemap</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      {/* Auth Modal for Hosts */}
+      <HostAuthModal
+        isOpen={showHostAuthModal}
+        onClose={() => {
+          setShowHostAuthModal(false);
+          setPendingFavoriteId(null);
+        }}
+        onSuccess={handleHostAuthSuccess}
+      />
     </div>
   );
 }

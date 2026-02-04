@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
+import { adminDb, hasAdminCredentials } from '@/lib/firebase-admin';
 import type { Provider, ProviderCategory } from '@/types';
 
 function extractBusinessName(data: Record<string, unknown>): string {
@@ -48,6 +48,13 @@ function extractImageUrls(data: Record<string, unknown>): string[] {
 // Fetch ONLY from ActiveProviders collection - these are providers that have been
 // approved and are actively listed on the marketplace
 export async function GET(request: NextRequest) {
+  if (!adminDb) {
+    return NextResponse.json(
+      { error: 'Database not configured' },
+      { status: 503 }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') as ProviderCategory | null;

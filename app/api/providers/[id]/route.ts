@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
+import { adminDb, hasAdminCredentials } from '@/lib/firebase-admin';
 
 const CATEGORY_COLLECTIONS = {
   FoodBeverage: 'Providers/FoodBeverage/providers',
@@ -50,6 +50,11 @@ function extractImageUrls(data: Record<string, unknown>): string[] {
 }
 
 async function findProviderById(id: string) {
+  if (!adminDb) {
+    console.error('Firebase Admin SDK not configured');
+    return null;
+  }
+
   // First check ActiveProviders
   try {
     const activeDoc = await adminDb.collection('ActiveProviders').doc(id).get();
@@ -88,6 +93,8 @@ async function findProviderById(id: string) {
 
 // Fetch provider details from the details subcollection
 async function fetchProviderDetails(category: string, providerId: string): Promise<Record<string, unknown>> {
+  if (!adminDb) return {};
+
   try {
     const detailsRef = adminDb
       .collection('Providers')
@@ -159,6 +166,9 @@ export async function GET(
       city: data.city || null,
       state: data.state || null,
       zipCode: data.zipCode || null,
+      // Location coordinates
+      lat: data.lat || data.latitude || (data.coordinates as any)?.lat || (data.location as any)?.lat || null,
+      lng: data.lng || data.longitude || (data.coordinates as any)?.lng || (data.location as any)?.lng || null,
       rating: data.rating || data.averageRating || null,
       reviewCount: data.reviewCount || data.totalReviews || null,
       imageUrls: extractImageUrls(data),
@@ -189,8 +199,12 @@ export async function GET(
       },
 
       // Cancellation policy
-      cancellationPolicy: data.cancellationPolicy || null,
+      cancellationPolicy: data.cancellationPolicy || formData.cancellationPolicy || null,
       cancellationPolicyDetails: data.cancellationPolicyDetails || null,
+
+      // Deposit
+      depositPercentage: data.depositPercentage || formData.depositPercentage || null,
+      depositDueAtBooking: data.depositDueAtBooking || formData.depositDueAtBooking || null,
     };
 
     // Add category-specific fields
@@ -233,6 +247,11 @@ export async function GET(
         reducedMinimum: highVolume.reducedMinimum || null,
         waiveMinimum: highVolume.waiveMinimum || false,
       } : null;
+
+      // FoodBeverage-specific policies
+      provider.cancellationPolicy = foodBeverageDetails.cancellationPolicy || formData.cancellationPolicy || data.cancellationPolicy || null;
+      provider.depositPercentage = foodBeverageDetails.depositPercentage || formData.depositPercentage || data.depositPercentage || null;
+      provider.calendarAvailability = foodBeverageDetails.calendarAvailability || formData.calendarAvailability || data.calendarAvailability || null;
     }
 
     if (category === 'Entertainment') {
@@ -272,6 +291,11 @@ export async function GET(
       provider.teardownTime = entertainmentDetails.teardownTime || null;
       provider.amplification = entertainmentDetails.amplification || null;
       provider.performanceAreaRequirements = entertainmentDetails.performanceAreaRequirements || null;
+
+      // Entertainment-specific policies
+      provider.cancellationPolicy = entertainmentDetails.cancellationPolicy || formData.cancellationPolicy || data.cancellationPolicy || null;
+      provider.depositPercentage = entertainmentDetails.depositDueAtBooking || formData.depositPercentage || data.depositPercentage || null;
+      provider.calendarAvailability = entertainmentDetails.calendarAvailability || entertainmentDetails.calendarManagement || formData.calendarAvailability || data.calendarAvailability || null;
 
       // Nonprofit flexibility for entertainment
       const nonprofitFlex = entertainmentDetails.nonprofitFlexibility as Record<string, unknown> | undefined;
@@ -361,21 +385,73 @@ export async function GET(
       // Nonprofit flexibility
       const nonprofitFlex = venueDetails.nonprofitFlexibility as Record<string, unknown> | undefined;
       provider.nonprofitFlexibility = nonprofitFlex || null;
+
+      // Venue-specific policies
+      provider.cancellationPolicy = venueDetails.cancellationPolicy || formData.cancellationPolicy || data.cancellationPolicy || null;
+      provider.depositPercentage = venueDetails.depositDueAtBooking || formData.depositPercentage || data.depositPercentage || null;
     }
 
     if (category === 'Vendors') {
-      const productCategory = data.productCategory;
-      const inventoryModel = data.inventoryModel;
+      const productCategory = data.productCategory || vendorDetails.productCategory;
+      const inventoryModel = data.inventoryModel || vendorDetails.inventoryModel;
 
       provider.productCategory = Array.isArray(productCategory) ? productCategory.join(', ') : productCategory || null;
-      provider.productionType = data.productionType || null;
-      provider.averagePriceRange = data.averagePriceRange || null;
+      provider.productionType = data.productionType || vendorDetails.productionType || null;
+      provider.averagePriceRange = data.averagePriceRange || vendorDetails.averagePriceRange || null;
       provider.inventoryModel = Array.isArray(inventoryModel) ? inventoryModel.join(', ') : inventoryModel || null;
-      provider.minimumOrderRequirement = data.minimumOrderRequirement || null;
+      provider.minimumOrderRequirement = data.minimumOrderRequirement || vendorDetails.minimumOrder || null;
+      provider.businessType = vendorDetails.businessType || formData.businessType || data.businessType || null;
+      provider.serviceCategory = vendorDetails.serviceCategory || formData.serviceCategory || null;
+      provider.serviceDescription = vendorDetails.serviceDescription || formData.serviceDescription || null;
 
-      // Products and services
-      provider.serviceItems = formData.serviceItems || formData.services || [];
-      provider.productItems = formData.productItems || formData.products || [];
+      // Products and services - check ALL sources in priority order
+      // serviceItems is primary, addOnItems is fallback (legacy field name)
+      const rawServiceItems = vendorDetails.serviceItems ||
+        formData.serviceItems ||
+        vendorDetails.addOnItems ||
+        formData.addOnItems ||
+        vendorDetails.services ||
+        formData.services ||
+        data.serviceItems ||
+        data.addOnItems ||
+        [];
+
+      // Normalize service items to consistent format
+      provider.serviceItems = Array.isArray(rawServiceItems) ? rawServiceItems.map((item: any) => ({
+        id: item.id || null,
+        name: item.name || '',
+        category: item.category || '',
+        price: item.price || 0,
+        pricingUnit: item.chargeType?.replace?.('_', ' ') || item.pricingUnit || 'per service',
+        image: item.photo || item.image || (item.photos && item.photos[0]) || null,
+        photos: item.photos || [],
+        serviceDetails: item.description || item.serviceDetails || '',
+        maxQuantity: item.maxQuantity || null,
+      })) : [];
+
+      // Product items
+      const rawProductItems = vendorDetails.productItems ||
+        formData.productItems ||
+        vendorDetails.products ||
+        formData.products ||
+        data.productItems ||
+        [];
+
+      provider.productItems = Array.isArray(rawProductItems) ? rawProductItems.map((item: any) => ({
+        id: item.id || null,
+        name: item.name || '',
+        price: item.price || 0,
+        description: item.description || '',
+        image: item.photo || item.image || (item.photos && item.photos[0]) || null,
+        photos: item.photos || [],
+      })) : [];
+
+      // Vendor-specific policies
+      provider.cancellationPolicy = vendorDetails.cancellationPolicy || formData.cancellationPolicy || data.cancellationPolicy || null;
+      provider.depositPercentage = vendorDetails.depositPercentage || formData.depositPercentage || data.depositPercentage || null;
+      provider.depositDueAtBooking = vendorDetails.depositDueAtBooking || formData.depositDueAtBooking || data.depositDueAtBooking || null;
+      provider.leadTimeRequired = vendorDetails.leadTime || vendorDetails.leadTimeRequired || formData.leadTimeRequired || data.leadTimeRequired || null;
+      provider.calendarAvailability = vendorDetails.calendarAvailability || formData.calendarAvailability || data.calendarAvailability || null;
     }
 
     return NextResponse.json({ provider });

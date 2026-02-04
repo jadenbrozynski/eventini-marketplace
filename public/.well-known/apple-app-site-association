@@ -1,0 +1,27 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "K7PXFWFY3B.org.reactjs.native.example.EventiniMockUp",
+        "paths": [
+          "*",
+          "/provider/*",
+          "/event/*",
+          "/booking/*",
+          "/profile/*"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "K7PXFWFY3B.org.reactjs.native.example.EventiniMockUp"
+    ]
+  },
+  "appclips": {
+    "apps": [
+      "K7PXFWFY3B.org.reactjs.native.example.EventiniMockUp"
+    ]
+  }
+}

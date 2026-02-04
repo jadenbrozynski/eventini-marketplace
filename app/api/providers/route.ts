@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
+import { adminDb, hasAdminCredentials } from '@/lib/firebase-admin';
 import type { Provider, ProviderCategory } from '@/types';
 
 const CATEGORY_COLLECTIONS: Record<ProviderCategory, string> = {
@@ -88,6 +88,8 @@ async function fetchProvidersFromCollection(
   collectionPath: string,
   category: ProviderCategory
 ): Promise<Provider[]> {
+  if (!adminDb) return [];
+
   try {
     const snapshot = await adminDb.collection(collectionPath).get();
     const providers: Provider[] = [];
@@ -145,6 +147,8 @@ async function fetchProvidersFromCollection(
 }
 
 async function fetchActiveProviders(): Promise<Provider[]> {
+  if (!adminDb) return [];
+
   try {
     const snapshot = await adminDb.collection('ActiveProviders').get();
     const providers: Provider[] = [];

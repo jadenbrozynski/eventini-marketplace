@@ -1,5 +1,6 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, Auth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,8 +11,24 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase only if not already initialized
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const db = getFirestore(app);
+// Check if Firebase is properly configured
+const isFirebaseConfigured = !!(
+  firebaseConfig.apiKey &&
+  firebaseConfig.authDomain &&
+  firebaseConfig.projectId
+);
 
-export { app, db };
+// Initialize Firebase only if configured
+let app: FirebaseApp | null = null;
+let db: Firestore | null = null;
+let auth: Auth | null = null;
+let googleProvider: GoogleAuthProvider | null = null;
+
+if (isFirebaseConfigured) {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  db = getFirestore(app);
+  auth = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
+}
+
+export { app, db, auth, googleProvider, isFirebaseConfigured };
