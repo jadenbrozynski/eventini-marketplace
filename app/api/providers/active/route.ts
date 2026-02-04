@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
 import type { Provider, ProviderCategory } from '@/types';
 
+// Force dynamic rendering - don't prerender during build
+export const dynamic = 'force-dynamic';
+
 // Category-aware name extraction matching EventiniMockUp's getProviderDisplayName
 function extractBusinessName(data: Record<string, unknown>): string {
   const formData = (data.formData as Record<string, unknown>) || {};

@@ -1,6 +1,10 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
+// Check if we're in a build/prerender phase - skip Firebase in these cases
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build' ||
+                     process.env.NODE_ENV === 'production' && typeof window === 'undefined' && !process.env.VERCEL_URL;
+
 // Check if all required environment variables are present
 const hasAdminCredentials = !!(
   process.env.FIREBASE_PROJECT_ID &&
@@ -17,28 +21,52 @@ let _initError: Error | null = null;
 function formatPrivateKey(key: string | undefined): string {
   if (!key) return '';
 
-  // If the key is JSON-encoded (starts with "), parse it
-  if (key.startsWith('"') && key.endsWith('"')) {
+  let formattedKey = key;
+
+  // If the key is JSON-encoded (wrapped in quotes), parse it
+  if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
     try {
-      key = JSON.parse(key);
+      formattedKey = JSON.parse(formattedKey);
     } catch {
       // Not valid JSON, continue with original
     }
   }
 
-  // Replace escaped newlines with actual newlines
-  return key ? key.replace(/\\n/g, '\n') : '';
+  // Replace literal \n with actual newlines (common in env vars)
+  formattedKey = formattedKey.replace(/\\n/g, '\n');
+
+  // Ensure proper PEM format
+  if (!formattedKey.includes('-----BEGIN')) {
+    return '';
+  }
+
+  return formattedKey;
 }
 
-// Lazy initialization - only initialize when getAdminDb is called
+// Lazy initialization - only initialize when getAdminDb is called at RUNTIME
 function initializeFirebaseAdmin(): void {
   if (_initialized) return;
   _initialized = true;
 
-  if (!hasAdminCredentials) return;
+  // Skip initialization during build phase
+  if (isBuildPhase) {
+    console.log('Skipping Firebase Admin initialization during build phase');
+    return;
+  }
+
+  if (!hasAdminCredentials) {
+    console.log('Firebase Admin credentials not configured');
+    return;
+  }
 
   try {
     const privateKey = formatPrivateKey(process.env.FIREBASE_PRIVATE_KEY);
+
+    if (!privateKey) {
+      console.error('Firebase private key is empty or invalid after formatting');
+      _initError = new Error('Invalid private key format');
+      return;
+    }
 
     // Initialize Firebase Admin SDK with environment variables
     const firebaseAdminConfig = {

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
 
+// Force dynamic rendering - don't prerender during build
+export const dynamic = 'force-dynamic';
+
 const CATEGORY_COLLECTIONS = {
   FoodBeverage: 'Providers/FoodBeverage/providers',
   Entertainment: 'Providers/Entertainment/providers',

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb, hasAdminCredentials, getInitError } from '@/lib/firebase-admin';
 import type { Provider, ProviderCategory } from '@/types';
 
+// Force dynamic rendering - don't prerender during build
+export const dynamic = 'force-dynamic';
+
 const CATEGORY_COLLECTIONS: Record<ProviderCategory, string> = {
   FoodBeverage: 'Providers/FoodBeverage/providers',
   Entertainment: 'Providers/Entertainment/providers',
