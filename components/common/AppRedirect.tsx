@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
+import { useState } from 'react';
 
 const APP_STORE_URL = 'https://apps.apple.com/app/id6751104982';
 
@@ -11,23 +10,24 @@ interface AppRedirectProps {
   description?: string;
 }
 
-export function AppRedirect({ deepLink, title = 'Opening Eventini...', description = 'Taking you to the app' }: AppRedirectProps) {
-  const [showFallback, setShowFallback] = useState(false);
+export function AppRedirect({ deepLink, title = 'Open in Eventini', description = 'This link opens in the Eventini app' }: AppRedirectProps) {
+  const [attempted, setAttempted] = useState(false);
+  const appUrl = `eventini://${deepLink}`;
 
-  useEffect(() => {
-    // Try to open the app via custom URL scheme
-    const appUrl = `eventini://${deepLink}`;
-    
-    // Set a timeout - if we're still here after 1.5s, show fallback
-    const timeout = setTimeout(() => {
-      setShowFallback(true);
-    }, 1500);
+  const handleOpenApp = () => {
+    setAttempted(true);
 
-    // Try to open the app
-    window.location.href = appUrl;
+    // Use an iframe to attempt opening the app without navigation error
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = appUrl;
+    document.body.appendChild(iframe);
 
-    return () => clearTimeout(timeout);
-  }, [deepLink]);
+    // Clean up iframe after attempt
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 100);
+  };
 
   const handleDownload = () => {
     window.location.href = APP_STORE_URL;
@@ -44,19 +44,29 @@ export function AppRedirect({ deepLink, title = 'Opening Eventini...', descripti
           </svg>
         </div>
 
-        {!showFallback ? (
+        <h1 className="text-xl font-semibold text-gray-900 mb-2">{title}</h1>
+        <p className="text-gray-500 text-sm mb-6">{description}</p>
+
+        {!attempted ? (
           <>
-            {/* Loading state */}
-            <div className="w-8 h-8 border-2 border-gray-200 border-t-[#44646c] rounded-full animate-spin mx-auto mb-4" />
-            <h1 className="text-xl font-semibold text-gray-900 mb-2">{title}</h1>
-            <p className="text-gray-500 text-sm">{description}</p>
+            <button
+              onClick={handleOpenApp}
+              className="w-full bg-[#44646c] text-white font-medium py-3 px-6 rounded-xl text-sm mb-3"
+            >
+              Open in App
+            </button>
+
+            <button
+              onClick={handleDownload}
+              className="w-full bg-gray-900 text-white font-medium py-3 px-6 rounded-xl text-sm mb-3"
+            >
+              Download on App Store
+            </button>
           </>
         ) : (
           <>
-            {/* Fallback - App not installed */}
-            <h1 className="text-xl font-semibold text-gray-900 mb-2">Get the Eventini App</h1>
-            <p className="text-gray-500 text-sm mb-6">
-              Download the app to continue
+            <p className="text-gray-500 text-sm mb-4">
+              Don't have the app yet?
             </p>
 
             <button
@@ -66,14 +76,21 @@ export function AppRedirect({ deepLink, title = 'Opening Eventini...', descripti
               Download on App Store
             </button>
 
-            <a
-              href="/"
-              className="block text-sm text-gray-500 hover:text-gray-700"
+            <button
+              onClick={handleOpenApp}
+              className="w-full border border-gray-300 text-gray-700 font-medium py-3 px-6 rounded-xl text-sm mb-3"
             >
-              Continue to website
-            </a>
+              Try Again
+            </button>
           </>
         )}
+
+        <a
+          href="/"
+          className="block text-sm text-gray-500 hover:text-gray-700 mt-2"
+        >
+          Continue to website
+        </a>
       </div>
     </div>
   );
