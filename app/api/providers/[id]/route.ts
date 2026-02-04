@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, hasAdminCredentials } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 
 const CATEGORY_COLLECTIONS = {
   FoodBeverage: 'Providers/FoodBeverage/providers',
@@ -77,6 +77,7 @@ function extractImageUrls(data: Record<string, unknown>): string[] {
 }
 
 async function findProviderById(id: string) {
+  const adminDb = getAdminDb();
   if (!adminDb) {
     console.error('Firebase Admin SDK not configured');
     return null;
@@ -120,6 +121,7 @@ async function findProviderById(id: string) {
 
 // Fetch provider details from the details subcollection
 async function fetchProviderDetails(category: string, providerId: string): Promise<Record<string, unknown>> {
+  const adminDb = getAdminDb();
   if (!adminDb) return {};
 
   try {

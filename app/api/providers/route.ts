@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, hasAdminCredentials } from '@/lib/firebase-admin';
+import { getAdminDb, hasAdminCredentials, getInitError } from '@/lib/firebase-admin';
 import type { Provider, ProviderCategory } from '@/types';
 
 const CATEGORY_COLLECTIONS: Record<ProviderCategory, string> = {
@@ -88,6 +88,7 @@ async function fetchProvidersFromCollection(
   collectionPath: string,
   category: ProviderCategory
 ): Promise<Provider[]> {
+  const adminDb = getAdminDb();
   if (!adminDb) return [];
 
   try {
@@ -147,6 +148,7 @@ async function fetchProvidersFromCollection(
 }
 
 async function fetchActiveProviders(): Promise<Provider[]> {
+  const adminDb = getAdminDb();
   if (!adminDb) return [];
 
   try {
@@ -192,13 +194,17 @@ async function fetchActiveProviders(): Promise<Provider[]> {
 
 export async function GET(request: NextRequest) {
   try {
+    const adminDb = getAdminDb();
+    const initError = getInitError();
+
     // Check if Firebase Admin is configured
     if (!hasAdminCredentials || !adminDb) {
-      console.error('Firebase Admin not configured. Missing credentials:', {
+      console.error('Firebase Admin not configured:', {
         hasProjectId: !!process.env.FIREBASE_PROJECT_ID,
         hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
         hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
         privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0,
+        initError: initError?.message,
       });
       return NextResponse.json(
         { error: 'Firebase not configured', providers: [], total: 0 },

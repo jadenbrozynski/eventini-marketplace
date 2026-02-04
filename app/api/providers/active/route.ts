@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, hasAdminCredentials } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 import type { Provider, ProviderCategory } from '@/types';
 
 // Category-aware name extraction matching EventiniMockUp's getProviderDisplayName
@@ -205,6 +205,8 @@ function extractLocation(data: Record<string, unknown>): { city: string | null; 
 // Fetch ONLY from ActiveProviders collection - these are providers that have been
 // approved and are actively listed on the marketplace
 export async function GET(request: NextRequest) {
+  const adminDb = getAdminDb();
+
   if (!adminDb) {
     return NextResponse.json(
       { error: 'Database not configured' },
