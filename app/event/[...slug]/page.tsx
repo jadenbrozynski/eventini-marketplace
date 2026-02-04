@@ -5,11 +5,12 @@ import { AppRedirect } from '@/components/common/AppRedirect';
 
 export default function EventPage() {
   const params = useParams();
-  const id = params.id as string;
+  const slug = params.slug as string[];
+  const path = slug.join('/');
 
   return (
     <AppRedirect 
-      deepLink={`event/${id}`}
+      deepLink={`event/${path}`}
       title="Event Details"
       description="Opening event in the app..."
     />

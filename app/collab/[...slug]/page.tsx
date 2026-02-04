@@ -3,13 +3,14 @@
 import { useParams } from 'next/navigation';
 import { AppRedirect } from '@/components/common/AppRedirect';
 
-export default function CollaboratePage() {
+export default function CollabPage() {
   const params = useParams();
-  const id = params.id as string;
+  const slug = params.slug as string[];
+  const path = slug.join('/');
 
   return (
     <AppRedirect 
-      deepLink={`collaborate/${id}`}
+      deepLink={`collab/${path}`}
       title="Collaboration Invite"
       description="Opening collaboration in the app..."
     />

@@ -5,11 +5,12 @@ import { AppRedirect } from '@/components/common/AppRedirect';
 
 export default function ReferralPage() {
   const params = useParams();
-  const code = params.code as string;
+  const slug = params.slug as string[];
+  const path = slug.join('/');
 
   return (
     <AppRedirect 
-      deepLink={`refer/${code}`}
+      deepLink={`refer/${path}`}
       title="Referral Link"
       description="Opening your referral in the app..."
     />
