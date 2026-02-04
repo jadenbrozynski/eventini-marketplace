@@ -210,8 +210,12 @@ export default function ServiceAreaMapInner({
         className="h-full w-full"
         style={{ background: '#f5f5f5' }}
         scrollWheelZoom={false}
-        dragging={true}
+        dragging={false}
         zoomControl={false}
+        doubleClickZoom={false}
+        touchZoom={false}
+        boxZoom={false}
+        keyboard={false}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

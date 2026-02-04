@@ -12,6 +12,7 @@ import { useProviders } from '@/hooks/useProviders';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { HostAuthModal } from '@/components/auth/HostAuthModal';
 import { Footer } from '@/components/layout/Footer';
+import { MobileAppModal } from '@/components/common/MobileAppModal';
 
 // Loading Skeleton Component - Responsive size
 function ProviderCardSkeleton() {
@@ -124,18 +125,18 @@ function ProviderCard({
               sizes="200px"
             />
 
-            {/* Navigation arrows */}
+            {/* Navigation arrows - hidden on mobile */}
             {images.length > 1 && isHovered && (
               <>
                 <button
                   onClick={prevImage}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md hover:scale-105 transition-transform opacity-90 hover:opacity-100"
+                  className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-white rounded-full items-center justify-center shadow-md hover:scale-105 transition-transform opacity-90 hover:opacity-100"
                 >
                   <ChevronLeft className="w-4 h-4 text-gray-800" />
                 </button>
                 <button
                   onClick={nextImage}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md hover:scale-105 transition-transform opacity-90 hover:opacity-100"
+                  className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-white rounded-full items-center justify-center shadow-md hover:scale-105 transition-transform opacity-90 hover:opacity-100"
                 >
                   <ChevronRight className="w-4 h-4 text-gray-800" />
                 </button>
@@ -314,9 +315,38 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Combined Header - Condensed when scrolled */}
-      <header className="sticky top-0 z-30 bg-white border-b border-gray-200 transition-all duration-200">
-        <div className="px-4 sm:px-6 lg:px-10 xl:px-20">
+      {/* Mobile Header - Airbnb style */}
+      <header className="sm:hidden sticky top-0 z-30 bg-white border-b border-gray-200">
+        <div className="px-4 pt-3 pb-2">
+          {/* Large Search Bar */}
+          <button className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-full py-3.5 px-6 shadow-sm hover:shadow-md transition-shadow">
+            <Search className="w-5 h-5 text-gray-900" />
+            <span className="text-[15px] font-medium text-gray-900">Start your search</span>
+          </button>
+        </div>
+
+        {/* Simple Text Tabs */}
+        <div className="flex items-center justify-center gap-6 px-4 overflow-x-auto scrollbar-hide">
+          {categories.filter(c => c.id !== 'all').map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(activeCategory === cat.id ? 'all' : cat.id)}
+              className="relative py-3 shrink-0"
+            >
+              <span className={`text-[15px] transition-colors ${activeCategory === cat.id ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>
+                {cat.name}
+              </span>
+              {activeCategory === cat.id && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 rounded-full" />
+              )}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      {/* Desktop Header - Original style */}
+      <header className="hidden sm:block sticky top-0 z-30 bg-white border-b border-gray-200 transition-all duration-200">
+        <div className="px-6 lg:px-10 xl:px-20">
           {/* Main header row */}
           <div className={`flex items-center justify-between transition-all duration-200 ${isScrolled ? 'h-14' : 'h-16 md:h-20'}`}>
             {/* Logo */}
@@ -337,7 +367,7 @@ export default function MarketplacePage() {
                   <div className={isScrolled ? 'px-3 py-0.5' : 'px-4 py-1'}>
                     <span className={`font-medium text-gray-900 ${isScrolled ? 'text-xs' : 'text-sm'}`}>Anywhere</span>
                   </div>
-                  <div className={`hidden sm:block ${isScrolled ? 'px-3 py-0.5' : 'px-4 py-1'}`}>
+                  <div className={isScrolled ? 'px-3 py-0.5' : 'px-4 py-1'}>
                     <span className={`font-medium text-gray-900 ${isScrolled ? 'text-xs' : 'text-sm'}`}>Any date</span>
                   </div>
                   <div className={`flex-1 hidden md:block ${isScrolled ? 'px-3 py-0.5' : 'px-4 py-1'}`}>
@@ -404,20 +434,20 @@ export default function MarketplacePage() {
                     setShowProfileDropdown(!showProfileDropdown);
                     setShowLanguageDropdown(false);
                   }}
-                  className={`flex items-center gap-2 border border-gray-300 rounded-full hover:shadow-md transition-all ${isScrolled ? 'p-1 pl-2' : 'p-1.5 pl-3'}`}
+                  className={`flex items-center gap-1 sm:gap-2 border border-gray-300 rounded-full hover:shadow-md transition-all ${isScrolled ? 'p-0.5 sm:p-1 pl-1.5 sm:pl-2' : 'p-1 sm:p-1.5 pl-2 sm:pl-3'}`}
                 >
-                  <Menu className={`text-gray-600 ${isScrolled ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                  <Menu className={`text-gray-600 ${isScrolled ? 'w-3 h-3' : 'w-3 h-3 sm:w-4 sm:h-4'}`} />
                   {user?.photoURL ? (
                     <Image
                       src={user.photoURL}
                       alt={user.displayName || 'User'}
-                      width={isScrolled ? 28 : 32}
-                      height={isScrolled ? 28 : 32}
-                      className="rounded-full"
+                      width={isScrolled ? 24 : 28}
+                      height={isScrolled ? 24 : 28}
+                      className="rounded-full sm:w-8 sm:h-8"
                     />
                   ) : (
-                    <div className={`bg-gray-500 rounded-full flex items-center justify-center ${isScrolled ? 'w-7 h-7' : 'w-8 h-8'}`}>
-                      <User className={`text-white ${isScrolled ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                    <div className={`bg-gray-500 rounded-full flex items-center justify-center ${isScrolled ? 'w-6 h-6 sm:w-7 sm:h-7' : 'w-7 h-7 sm:w-8 sm:h-8'}`}>
+                      <User className={`text-white ${isScrolled ? 'w-3 h-3' : 'w-3 h-3 sm:w-4 sm:h-4'}`} />
                     </div>
                   )}
                 </button>
@@ -514,9 +544,9 @@ export default function MarketplacePage() {
         </div>
       </header>
 
-      {/* Category Tabs - Only show when not scrolled */}
-      <div className={`bg-white border-b border-gray-200 shadow-sm transition-all duration-200 ${isScrolled ? 'h-0 overflow-hidden opacity-0' : 'opacity-100'}`}>
-        <div className="px-4 sm:px-6 lg:px-10 xl:px-20">
+      {/* Category Tabs - Desktop only, hidden on mobile */}
+      <div className={`hidden sm:block bg-white border-b border-gray-200 shadow-sm transition-all duration-200 ${isScrolled ? 'h-0 overflow-hidden opacity-0' : 'opacity-100'}`}>
+        <div className="px-6 lg:px-10 xl:px-20">
           <div className="flex items-center py-4">
             {/* Categories */}
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-1 pr-4">
@@ -539,7 +569,7 @@ export default function MarketplacePage() {
             </div>
 
             {/* Filters button */}
-            <button className="flex items-center gap-2 px-5 py-2.5 border-2 border-gray-300 rounded-full shrink-0 hover:border-gray-400 hover:bg-gray-50 transition-all ml-4">
+            <button className="flex items-center gap-2 px-5 py-2.5 border-2 border-gray-300 rounded-full shrink-0 hover:border-gray-400 hover:bg-gray-50 transition-all">
               <SlidersHorizontal className="w-4 h-4 text-gray-600" />
               <span className="text-sm font-semibold text-gray-700">Filters</span>
             </button>
@@ -600,6 +630,9 @@ export default function MarketplacePage() {
         }}
         onSuccess={handleHostAuthSuccess}
       />
+
+      {/* Mobile App Download Modal */}
+      <MobileAppModal onProviderSignup={() => setShowAuthModal(true)} />
     </div>
   );
 }

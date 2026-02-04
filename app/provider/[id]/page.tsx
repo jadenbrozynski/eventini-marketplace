@@ -1179,6 +1179,59 @@ export default function ProviderDetailPage() {
               </div>
             </div>
 
+            {/* Mobile Booking Info - Shows only on mobile, before service area map */}
+            <div className="lg:hidden py-6 border-b border-gray-200">
+              <div className="bg-gray-50 rounded-xl p-4">
+                {/* Price */}
+                <div className="mb-3">
+                  {provider.category === 'FoodBeverage' && provider.minimumGuarantee && (
+                    <>
+                      <span className="text-xl font-semibold">${String(provider.minimumGuarantee).replace(/^\$/, '')}</span>
+                      <span className="text-gray-500 text-sm"> minimum</span>
+                    </>
+                  )}
+                  {provider.category === 'Entertainment' && provider.compensationFlatFee && (
+                    <>
+                      <span className="text-xl font-semibold">${String(provider.compensationFlatFee).replace(/^\$/, '')}</span>
+                      <span className="text-gray-500 text-sm"> starting</span>
+                    </>
+                  )}
+                  {provider.category === 'Venues' && (provider.rentalFeeHourly || provider.rentalFeeFlat) && (
+                    <>
+                      <span className="text-xl font-semibold">${String(provider.rentalFeeHourly || provider.rentalFeeFlat).replace(/^\$/, '')}</span>
+                      <span className="text-gray-500 text-sm">{provider.rentalFeeHourly ? ' /hour' : ' flat'}</span>
+                    </>
+                  )}
+                  {provider.category === 'Vendors' && provider.minimumOrderRequirement && (
+                    <>
+                      <span className="text-xl font-semibold">${String(provider.minimumOrderRequirement).replace(/^\$/, '')}</span>
+                      <span className="text-gray-500 text-sm"> minimum order</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Quick highlights */}
+                {highlights.length > 0 && (
+                  <div className="space-y-2 mb-3">
+                    {highlights.slice(0, 3).map((h, i) => {
+                      const Icon = h.icon;
+                      return (
+                        <div key={i} className="flex items-center gap-2">
+                          <Icon className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm text-gray-700">{h.title}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Message button for mobile */}
+                <button className="w-full border border-gray-300 text-gray-900 font-medium py-2.5 px-4 rounded-lg hover:bg-white transition-colors text-sm">
+                  Message Provider
+                </button>
+              </div>
+            </div>
+
             {/* Service Area Map - Right under location info */}
             {provider.serviceRadius && provider.serviceRadius > 0 && (
               <div className="pt-4 pb-6 border-b border-gray-200">
@@ -1956,8 +2009,8 @@ export default function ProviderDetailPage() {
 
           </div>
 
-          {/* Sidebar - Booking Card */}
-          <div className="lg:col-span-1">
+          {/* Sidebar - Booking Card (hidden on mobile) */}
+          <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-20 border border-gray-200 rounded-xl p-5 shadow-lg">
               {/* Price */}
               <div className="mb-4">
@@ -2128,6 +2181,44 @@ export default function ProviderDetailPage() {
           />
         </div>
       )}
+
+      {/* Floating Book Button - Mobile only */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-40">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            {provider.category === 'FoodBeverage' && provider.minimumGuarantee && (
+              <>
+                <span className="text-lg font-semibold">${String(provider.minimumGuarantee).replace(/^\$/, '')}</span>
+                <span className="text-gray-500 text-sm"> min</span>
+              </>
+            )}
+            {provider.category === 'Entertainment' && provider.compensationFlatFee && (
+              <>
+                <span className="text-lg font-semibold">${String(provider.compensationFlatFee).replace(/^\$/, '')}</span>
+                <span className="text-gray-500 text-sm"> starting</span>
+              </>
+            )}
+            {provider.category === 'Venues' && (provider.rentalFeeHourly || provider.rentalFeeFlat) && (
+              <>
+                <span className="text-lg font-semibold">${String(provider.rentalFeeHourly || provider.rentalFeeFlat).replace(/^\$/, '')}</span>
+                <span className="text-gray-500 text-sm">{provider.rentalFeeHourly ? '/hr' : ''}</span>
+              </>
+            )}
+            {provider.category === 'Vendors' && provider.minimumOrderRequirement && (
+              <>
+                <span className="text-lg font-semibold">${String(provider.minimumOrderRequirement).replace(/^\$/, '')}</span>
+                <span className="text-gray-500 text-sm"> min</span>
+              </>
+            )}
+          </div>
+          <button className="bg-[#44646c] text-white font-semibold py-3 px-8 rounded-lg hover:bg-[#3a565d] transition-colors">
+            Book
+          </button>
+        </div>
+      </div>
+
+      {/* Spacer for floating button on mobile */}
+      <div className="h-20 lg:hidden" />
     </div>
   );
 }
