@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Smartphone } from 'lucide-react';
-import Image from 'next/image';
+import { X } from 'lucide-react';
 
 const APP_STORE_URL = 'https://apps.apple.com/app/id6751104982';
 
@@ -45,72 +44,60 @@ export function MobileAppModal({ onProviderSignup }: MobileAppModalProps) {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40"
         onClick={handleDismiss}
       />
 
       {/* Modal */}
-      <div className="relative bg-white w-full sm:w-auto sm:min-w-[320px] sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-6 pb-8 sm:pb-6 animate-slide-up sm:animate-fade-in">
+      <div className="relative bg-white w-full rounded-t-2xl px-5 py-6 animate-slide-up safe-area-bottom">
         {/* Close button */}
         <button
           onClick={handleDismiss}
-          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center text-gray-400"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Content */}
         <div className="text-center">
-          {/* App Icon */}
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl overflow-hidden shadow-lg">
-            <Image
-              src="/eventini-logo.png"
-              alt="Eventini"
-              width={64}
-              height={64}
-              className="w-full h-full object-cover"
-            />
+          {/* App Icon - Small and clean */}
+          <div className="w-12 h-12 mx-auto mb-3 rounded-xl overflow-hidden">
+            <svg viewBox="0 0 100 100" className="w-full h-full">
+              <rect width="100" height="100" fill="#44646c" rx="20"/>
+              <text x="50" y="62" textAnchor="middle" fill="white" fontSize="40" fontWeight="bold" fontFamily="system-ui">E</text>
+            </svg>
           </div>
 
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">
-            Get the Eventini App
+          <h2 className="text-base font-semibold text-gray-900 mb-1">
+            Eventini App
           </h2>
-          <p className="text-sm text-gray-500 mb-5">
-            Download our app for the best experience
+          <p className="text-sm text-gray-500 mb-4">
+            Get the best experience on our app
           </p>
 
           {/* Download Button */}
           <button
             onClick={handleDownload}
-            className="w-full bg-[#44646c] text-white font-semibold py-3 px-4 rounded-xl hover:bg-[#3a565d] transition-colors flex items-center justify-center gap-2 mb-4"
+            className="w-full bg-gray-900 text-white font-medium py-3 px-4 rounded-xl text-sm mb-3"
           >
-            <Smartphone className="w-5 h-5" />
-            Download on App Store
+            Download App
           </button>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400">or</span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
-
           {/* Provider signup option */}
-          <p className="text-xs text-gray-500 mb-2">No Apple device?</p>
           <button
             onClick={handleProviderSignup}
-            className="w-full border border-gray-300 text-gray-900 font-medium py-2.5 px-4 rounded-xl hover:bg-gray-50 transition-colors text-sm"
+            className="w-full text-gray-600 font-medium py-2.5 text-sm"
           >
-            Sign up as a Provider
+            Sign up as Provider
           </button>
 
           {/* Skip link */}
           <button
             onClick={handleDismiss}
-            className="mt-4 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            className="mt-2 text-xs text-gray-400"
           >
             Continue on web
           </button>
@@ -121,28 +108,16 @@ export function MobileAppModal({ onProviderSignup }: MobileAppModalProps) {
         @keyframes slide-up {
           from {
             transform: translateY(100%);
-            opacity: 0;
           }
           to {
             transform: translateY(0);
-            opacity: 1;
-          }
-        }
-        @keyframes fade-in {
-          from {
-            transform: scale(0.95);
-            opacity: 0;
-          }
-          to {
-            transform: scale(1);
-            opacity: 1;
           }
         }
         .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
+          animation: slide-up 0.25s ease-out;
         }
-        .animate-fade-in {
-          animation: fade-in 0.2s ease-out;
+        .safe-area-bottom {
+          padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
         }
       `}</style>
     </div>

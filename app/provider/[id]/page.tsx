@@ -1225,10 +1225,22 @@ export default function ProviderDetailPage() {
                   </div>
                 )}
 
-                {/* Message button for mobile */}
-                <button className="w-full border border-gray-300 text-gray-900 font-medium py-2.5 px-4 rounded-lg hover:bg-white transition-colors text-sm">
-                  Message Provider
-                </button>
+                {/* Action buttons for mobile */}
+                <div className="space-y-2">
+                  {/* View Menu button for F&B */}
+                  {provider.category === 'FoodBeverage' && ((provider.aLaCarteMenu?.length || 0) > 0 || (provider.cateringPackages?.length || 0) > 0) && (
+                    <button
+                      onClick={() => document.getElementById('menu-section')?.scrollIntoView({ behavior: 'smooth' })}
+                      className="w-full bg-gray-900 text-white font-medium py-2.5 px-4 rounded-lg text-sm flex items-center justify-center gap-2"
+                    >
+                      <Utensils className="w-4 h-4" />
+                      View Menu
+                    </button>
+                  )}
+                  <button className="w-full border border-gray-300 text-gray-900 font-medium py-2.5 px-4 rounded-lg hover:bg-white transition-colors text-sm">
+                    Message Provider
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1377,49 +1389,68 @@ export default function ProviderDetailPage() {
             {provider.category === 'FoodBeverage' && (provider.offersPickup || provider.offersDelivery || provider.offersOnSite || provider.hoursOfOperation) && (
               <div className="py-6 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Service Options</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   {/* Service types */}
-                  <div className="sm:col-span-2">
-                    <div className="flex flex-wrap gap-2">
-                      {provider.offersOnSite && (
-                        <span className="px-3 py-1.5 bg-green-50 text-green-700 text-sm font-medium rounded-full">
-                          On-site Service
-                        </span>
-                      )}
-                      {provider.offersDelivery && (
-                        <span className="px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-medium rounded-full">
-                          Delivery Available {provider.deliveryFee && `($${provider.deliveryFee})`}
-                        </span>
-                      )}
-                      {provider.offersPickup && (
-                        <span className="px-3 py-1.5 bg-purple-50 text-purple-700 text-sm font-medium rounded-full">
-                          Pickup Available
-                        </span>
-                      )}
-                    </div>
+                  <div className="space-y-3">
+                    {provider.offersOnSite && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-[#44646c]/10 flex items-center justify-center shrink-0">
+                          <svg className="w-4 h-4 text-[#44646c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </div>
+                        <span className="text-sm text-gray-900">On-site service available</span>
+                      </div>
+                    )}
+                    {provider.offersDelivery && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-[#44646c]/10 flex items-center justify-center shrink-0">
+                          <svg className="w-4 h-4 text-[#44646c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                          </svg>
+                        </div>
+                        <span className="text-sm text-gray-900">Delivery available {provider.deliveryFee && <span className="text-gray-500">(${provider.deliveryFee} fee)</span>}</span>
+                      </div>
+                    )}
+                    {provider.offersPickup && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-[#44646c]/10 flex items-center justify-center shrink-0">
+                          <svg className="w-4 h-4 text-[#44646c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                          </svg>
+                        </div>
+                        <span className="text-sm text-gray-900">Pickup available</span>
+                      </div>
+                    )}
                   </div>
-                  {provider.pickupLocation && (
-                    <div>
-                      <p className="text-sm text-gray-500">Pickup Location</p>
-                      <p className="text-sm font-medium text-gray-900">{provider.pickupLocation}</p>
-                    </div>
-                  )}
-                  {provider.hoursOfOperation && (
-                    <div>
-                      <p className="text-sm text-gray-500">Hours of Operation</p>
-                      <p className="text-sm font-medium text-gray-900">{provider.hoursOfOperation}</p>
-                    </div>
-                  )}
-                  {provider.daysOfOperation && provider.daysOfOperation.length > 0 && (
-                    <div>
-                      <p className="text-sm text-gray-500">Available Days</p>
-                      <p className="text-sm font-medium text-gray-900">{provider.daysOfOperation.join(', ')}</p>
-                    </div>
-                  )}
-                  {provider.foodTruckDimensions && (
-                    <div>
-                      <p className="text-sm text-gray-500">Food Truck Dimensions</p>
-                      <p className="text-sm font-medium text-gray-900">{provider.foodTruckDimensions}</p>
+                  {/* Additional details */}
+                  {(provider.pickupLocation || provider.hoursOfOperation || provider.daysOfOperation?.length || provider.foodTruckDimensions) && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+                      {provider.pickupLocation && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-0.5">Pickup Location</p>
+                          <p className="text-sm text-gray-900">{provider.pickupLocation}</p>
+                        </div>
+                      )}
+                      {provider.hoursOfOperation && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-0.5">Hours</p>
+                          <p className="text-sm text-gray-900">{provider.hoursOfOperation}</p>
+                        </div>
+                      )}
+                      {provider.daysOfOperation && provider.daysOfOperation.length > 0 && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-0.5">Available Days</p>
+                          <p className="text-sm text-gray-900">{provider.daysOfOperation.join(', ')}</p>
+                        </div>
+                      )}
+                      {provider.foodTruckDimensions && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-0.5">Truck Dimensions</p>
+                          <p className="text-sm text-gray-900">{provider.foodTruckDimensions}</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1555,7 +1586,7 @@ export default function ProviderDetailPage() {
 
             {/* Menu Section (Food & Beverage) */}
             {provider.category === 'FoodBeverage' && ((provider.aLaCarteMenu?.length || 0) > 0 || (provider.cateringPackages?.length || 0) > 0) && (
-              <div className="py-6 border-b border-gray-200">
+              <div id="menu-section" className="py-6 border-b border-gray-200 scroll-mt-20">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Menu</h2>
 
                 {/* Menu Toggle */}
@@ -1595,26 +1626,26 @@ export default function ProviderDetailPage() {
                   if (hasImages) {
                     return (
                       <div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                           {displayedItems.map((item, index) => {
                             const itemImage = isValidImage(item.image) ? item.image : isValidImage(item.imageUrl) ? item.imageUrl : null;
                             return (
-                              <div key={item.id || index} className="flex flex-col p-3 bg-gray-50 rounded-xl">
+                              <div key={item.id || index} className="flex flex-col p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
                                 {itemImage ? (
-                                  <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-gray-200 mb-2">
+                                  <div className="relative w-full aspect-square sm:aspect-[4/3] rounded-lg overflow-hidden bg-gray-200 mb-2">
                                     <Image src={itemImage} alt={item.name} fill className="object-cover" />
                                   </div>
                                 ) : (
-                                  <div className="w-full aspect-[4/3] rounded-lg bg-gray-200 mb-2 flex items-center justify-center">
-                                    <Utensils className="w-8 h-8 text-gray-400" />
+                                  <div className="w-full aspect-square sm:aspect-[4/3] rounded-lg bg-gray-200 mb-2 flex items-center justify-center">
+                                    <Utensils className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                                   </div>
                                 )}
-                                <p className="font-medium text-gray-900 text-sm line-clamp-2">{item.name}</p>
+                                <p className="font-medium text-gray-900 text-xs sm:text-sm line-clamp-2">{item.name}</p>
                                 {item.description && (
-                                  <p className="text-xs text-gray-500 line-clamp-2 mt-1">{item.description}</p>
+                                  <p className="text-[10px] sm:text-xs text-gray-500 line-clamp-1 sm:line-clamp-2 mt-0.5 sm:mt-1 hidden sm:block">{item.description}</p>
                                 )}
                                 {item.price > 0 && (
-                                  <p className="text-sm font-semibold text-[#44646c] mt-2">
+                                  <p className="text-xs sm:text-sm font-semibold text-[#44646c] mt-1 sm:mt-2">
                                     ${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
                                   </p>
                                 )}

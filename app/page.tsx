@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, SlidersHorizontal, Star, Heart, ChevronLeft, ChevronRight, Globe, Menu, User, LogOut, Settings, Megaphone, Check, LayoutDashboard } from 'lucide-react';
+import { Search, SlidersHorizontal, Star, Heart, ChevronLeft, ChevronRight, Globe, Menu, User, LogOut, Settings, Megaphone, Check, LayoutDashboard, MapPin } from 'lucide-react';
 import type { Provider, ProviderCategory } from '@/types';
 import { getProviderDisplayName, getProviderImage, getProviderLocation } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -282,6 +282,23 @@ export default function MarketplacePage() {
         return cat && p.category === cat.category;
       });
 
+  // Group providers by state
+  const providersByState = filteredProviders.reduce((acc, provider) => {
+    const state = provider.state || 'Other';
+    if (!acc[state]) {
+      acc[state] = [];
+    }
+    acc[state].push(provider);
+    return acc;
+  }, {} as Record<string, Provider[]>);
+
+  // Sort states alphabetically, but put "Other" at the end
+  const sortedStates = Object.keys(providersByState).sort((a, b) => {
+    if (a === 'Other') return 1;
+    if (b === 'Other') return -1;
+    return a.localeCompare(b);
+  });
+
   const toggleFavorite = (id: string) => {
     // If user is not logged in, show auth modal
     if (!user) {
@@ -319,9 +336,9 @@ export default function MarketplacePage() {
       <header className="sm:hidden sticky top-0 z-30 bg-white border-b border-gray-200">
         <div className="px-4 pt-3 pb-2">
           {/* Large Search Bar */}
-          <button className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-full py-3.5 px-6 shadow-sm hover:shadow-md transition-shadow">
-            <Search className="w-5 h-5 text-gray-900" />
-            <span className="text-[15px] font-medium text-gray-900">Start your search</span>
+          <button className="w-full flex items-center justify-center gap-2.5 bg-white border border-gray-200 rounded-full py-3 px-5 shadow-sm hover:shadow-md transition-shadow">
+            <Search className="w-4 h-4 text-gray-500" />
+            <span className="text-sm text-gray-500">Plan your event</span>
           </button>
         </div>
 
@@ -577,12 +594,12 @@ export default function MarketplacePage() {
         </div>
       </div>
 
-      {/* Provider Grid - 7 columns max, centered */}
-      <main className="py-6 flex-1">
+      {/* Provider Grid - Grouped by State */}
+      <main className="py-4 sm:py-6 flex-1">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-x-5 gap-y-8">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(i => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 sm:gap-x-5 gap-y-6 sm:gap-y-8">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => (
                 <ProviderCardSkeleton key={i} />
               ))}
             </div>
@@ -597,14 +614,27 @@ export default function MarketplacePage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-x-5 gap-y-8">
-              {filteredProviders.map(provider => (
-                <ProviderCard
-                  key={provider.id}
-                  provider={provider}
-                  isFavorite={favorites.has(provider.id)}
-                  onToggleFavorite={() => toggleFavorite(provider.id)}
-                />
+            <div className="space-y-8 sm:space-y-10">
+              {sortedStates.map(state => (
+                <section key={state}>
+                  {/* State Header */}
+                  <div className="flex items-center gap-2 mb-4 sm:mb-5">
+                    <MapPin className="w-4 h-4 text-[#44646c]" />
+                    <h2 className="text-base sm:text-lg font-semibold text-gray-900">{state}</h2>
+                    <span className="text-xs sm:text-sm text-gray-400">({providersByState[state].length})</span>
+                  </div>
+                  {/* Providers Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 sm:gap-x-5 gap-y-6 sm:gap-y-8">
+                    {providersByState[state].map(provider => (
+                      <ProviderCard
+                        key={provider.id}
+                        provider={provider}
+                        isFavorite={favorites.has(provider.id)}
+                        onToggleFavorite={() => toggleFavorite(provider.id)}
+                      />
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           )}
