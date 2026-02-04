@@ -8,6 +8,7 @@ import { Search, SlidersHorizontal, Star, Heart, ChevronLeft, ChevronRight, Glob
 import type { Provider, ProviderCategory } from '@/types';
 import { getProviderDisplayName, getProviderImage, getProviderLocation } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProviders } from '@/hooks/useProviders';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { HostAuthModal } from '@/components/auth/HostAuthModal';
 import { Footer } from '@/components/layout/Footer';
