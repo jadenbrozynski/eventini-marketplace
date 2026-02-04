@@ -271,23 +271,7 @@ export default function MarketplacePage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch only active providers
-  useEffect(() => {
-    async function fetchProviders() {
-      try {
-        const res = await fetch('/api/providers/active');
-        if (res.ok) {
-          const data = await res.json();
-          setProviders(data.providers || []);
-        }
-      } catch (error) {
-        console.error('Error fetching providers:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchProviders();
-  }, []);
+  // Providers are fetched by useProviders hook (client-side Firestore)
 
   // Filter providers by category
   const filteredProviders = activeCategory === 'all'
