@@ -5,21 +5,18 @@
       {
         "appID": "K7PXFWFY3B.org.reactjs.native.example.EventiniMockUp",
         "paths": [
-          "*",
+          "/refer/*",
+          "/share/*",
+          "/s/*",
           "/provider/*",
           "/event/*",
-          "/booking/*",
-          "/profile/*"
+          "/collaborate/*",
+          "/collab/*"
         ]
       }
     ]
   },
   "webcredentials": {
-    "apps": [
-      "K7PXFWFY3B.org.reactjs.native.example.EventiniMockUp"
-    ]
-  },
-  "appclips": {
     "apps": [
       "K7PXFWFY3B.org.reactjs.native.example.EventiniMockUp"
     ]
