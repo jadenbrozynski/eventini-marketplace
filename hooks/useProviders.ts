@@ -156,10 +156,7 @@ export function useProviders(options: UseProvidersOptions = {}): UseProvidersRet
 
       setProviders(result);
     } catch (err) {
-      console.error('=== FIREBASE ERROR ===');
-      console.error('Error type:', err instanceof Error ? err.name : typeof err);
-      console.error('Error message:', err instanceof Error ? err.message : String(err));
-      console.error('Full error:', err);
+      console.error('Error fetching providers:', err);
       setError(err instanceof Error ? err : new Error('Unknown error'));
     } finally {
       setIsLoading(false);
