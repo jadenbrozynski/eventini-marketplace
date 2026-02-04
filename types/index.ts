@@ -18,6 +18,7 @@ export interface Provider {
   city?: string;
   state?: string;
   zipCode?: string;
+  serviceLocation?: string; // Full "City, State" from onboarding
 
   // Media
   imageUrls: string[];
@@ -78,6 +79,11 @@ export function getProviderImage(provider: Provider): string | null {
 
 // Helper function to get location string
 export function getProviderLocation(provider: Provider): string {
+  // First check serviceLocation (already formatted as "City, State")
+  if (provider.serviceLocation) {
+    return provider.serviceLocation;
+  }
+  // Fall back to city and state fields
   if (provider.city && provider.state) {
     return `${provider.city}, ${provider.state}`;
   }

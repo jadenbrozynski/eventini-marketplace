@@ -23,13 +23,15 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const handleGoogleSignIn = () => {
     setIsLoading(true);
 
-    // Use demo login and redirect to provider dashboard
+    // Use demo login and redirect to provider onboarding for new providers
     setTimeout(() => {
       signInAsDemo();
       setIsLoading(false);
       onSuccess?.();
       onClose();
-      router.push('/provider/dashboard');
+      // New providers go to onboarding, existing providers go to dashboard
+      // For now, always send to onboarding as this is a new flow
+      router.push('/provider/onboarding');
     }, 500);
   };
 

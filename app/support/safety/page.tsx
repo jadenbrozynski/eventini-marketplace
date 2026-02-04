@@ -148,67 +148,68 @@ export default function SafetyPage() {
 
       {/* Safety Tips Section */}
       <div className="mb-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Safety Tips</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Safety Tips</h2>
+        <p className="text-gray-600 mb-6">Best practices to keep your bookings safe and secure</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* For Hosts */}
-          <div className="bg-blue-50 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Users className="w-5 h-5 text-blue-600" />
-              For Hosts
-            </h3>
-            <ul className="space-y-3 text-gray-600">
-              <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium shrink-0">1</span>
-                <span>Always book and pay through the Eventini platform to maintain protection</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium shrink-0">2</span>
-                <span>Review provider ratings, reviews, and photos before booking</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium shrink-0">3</span>
-                <span>Communicate through the platform to keep a record of all agreements</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium shrink-0">4</span>
-                <span>Verify event details with your provider before the event date</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium shrink-0">5</span>
-                <span>Report any suspicious activity immediately</span>
-              </li>
-            </ul>
+        {/* For Hosts */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-[#44646c]/10 flex items-center justify-center">
+              <Users className="w-5 h-5 text-[#44646c]" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">For Hosts</h3>
+              <span className="text-xs text-[#44646c] uppercase tracking-wide font-medium">5 essential tips</span>
+            </div>
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { title: 'Book on platform', desc: 'Always book and pay through Eventini to maintain protection and secure payment guarantees' },
+              { title: 'Review before booking', desc: 'Check provider ratings, verified reviews, and photos to make informed decisions' },
+              { title: 'Keep communication logged', desc: 'Use in-app messaging to maintain a record of all agreements and discussions' },
+              { title: 'Verify details', desc: 'Confirm event specifics with your provider before your event date' },
+              { title: 'Report concerns', desc: 'Flag any suspicious activity immediately through our reporting system' },
+            ].map((tip, index) => (
+              <div key={index} className="bg-white border border-gray-200 rounded-xl p-5 hover:border-[#44646c] hover:shadow-md transition-all">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-6 h-6 rounded-lg bg-[#44646c] text-white flex items-center justify-center text-xs font-bold">{index + 1}</span>
+                  <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">Host</span>
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-1">{tip.title}</h4>
+                <p className="text-sm text-gray-600">{tip.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
 
-          {/* For Providers */}
-          <div className="bg-green-50 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-green-600" />
-              For Providers
-            </h3>
-            <ul className="space-y-3 text-gray-600">
-              <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-medium shrink-0">1</span>
-                <span>Only accept payments through the Eventini platform</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-medium shrink-0">2</span>
-                <span>Maintain up-to-date insurance and necessary permits</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-medium shrink-0">3</span>
-                <span>Verify event details and venue access before arriving</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-medium shrink-0">4</span>
-                <span>Document event setup and completion with photos</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-medium shrink-0">5</span>
-                <span>Report any issues or safety concerns immediately</span>
-              </li>
-            </ul>
+        {/* For Providers */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-[#44646c]/10 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-[#44646c]" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">For Providers</h3>
+              <span className="text-xs text-[#44646c] uppercase tracking-wide font-medium">5 essential tips</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { title: 'Platform payments only', desc: 'Only accept payments through Eventini to ensure secure transactions and payout protection' },
+              { title: 'Stay compliant', desc: 'Keep your insurance and necessary permits up-to-date and visible on your profile' },
+              { title: 'Verify before arrival', desc: 'Confirm event details and venue access requirements before your arrival' },
+              { title: 'Document everything', desc: 'Take photos of event setup and completion for your records and protection' },
+              { title: 'Report issues', desc: 'Flag any safety concerns or problems immediately through our support system' },
+            ].map((tip, index) => (
+              <div key={index} className="bg-white border border-gray-200 rounded-xl p-5 hover:border-[#44646c] hover:shadow-md transition-all">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-6 h-6 rounded-lg bg-[#44646c] text-white flex items-center justify-center text-xs font-bold">{index + 1}</span>
+                  <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">Provider</span>
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-1">{tip.title}</h4>
+                <p className="text-sm text-gray-600">{tip.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

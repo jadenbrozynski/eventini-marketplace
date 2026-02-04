@@ -138,11 +138,80 @@ interface ProviderDetails {
   minimumOrderRequirement?: string;
   serviceItems?: any[];
   productItems?: any[];
+  // Additional vendor fields
+  serviceCategory?: string;
+  productTypes?: string[];
+  preferredEventTypes?: string[];
+  // Vendor feature flags
+  customPersonalized?: boolean;
+  giftReadyPackaging?: boolean;
+  locallyMade?: boolean;
+  culturallyInspired?: boolean;
+  // Service features
+  availableWeekends?: boolean;
+  sameDayAvailable?: boolean;
+  travelFlexible?: boolean;
+  multipleEventsSameDay?: boolean;
+  bilingual?: boolean;
+  fullyInsured?: boolean;
+  travelNotes?: string;
   // Availability
   calendarAvailability?: string;
   // Deposit
   depositPercentage?: number;
   depositDueAtBooking?: string;
+  // Entertainment additional fields
+  actDescription?: string;
+  performanceTypes?: string[];
+  performanceStyles?: string[];
+  achievements?: string;
+  demoAudio?: string;
+  performanceVideo?: string;
+  allAudio?: string[];
+  allVideos?: string[];
+  setupTime?: string;
+  teardownTime?: string;
+  amplification?: string;
+  performanceAreaRequirements?: string;
+  feeStructureDetails?: string[];
+  // F&B service options
+  offersPickup?: boolean;
+  offersDelivery?: boolean;
+  offersOnSite?: boolean;
+  deliveryFee?: string;
+  pickupLocation?: string;
+  hoursOfOperation?: string;
+  daysOfOperation?: string[];
+  operatingSchedule?: string;
+  // Venue spaces
+  venueSpaces?: {
+    id?: string;
+    name: string;
+    description?: string;
+    squareFeet?: number;
+    seatedCapacity?: number;
+    standingCapacity?: number;
+    hourlyRate?: number;
+    photos?: string[];
+    amenities?: string[];
+    layoutOptions?: string[];
+  }[];
+  accessibility?: string[];
+  houseRules?: string[];
+  noiseCurfew?: string;
+  preferredVendorList?: boolean;
+  allowOutsideVendors?: boolean;
+  minimumHours?: string;
+  cleaningFee?: string;
+  requiresInsurance?: boolean;
+  uniqueArchitecture?: boolean;
+  fullService?: boolean;
+  blankCanvas?: boolean;
+  // Vendor business info
+  businessType?: string;
+  serviceDescription?: string;
+  productDescription?: string;
+  averagePriceRange?: string;
 }
 
 // Highlight row component (Airbnb style)
@@ -169,9 +238,16 @@ function CateringPackageCard({ pkg, onViewDetails }: { pkg: CateringPackage; onV
       onClick={onViewDetails}
       className="w-full text-left border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow bg-white"
     >
-      <div className="relative h-32 bg-gray-100">
+      <div className="relative aspect-[4/3] w-full bg-gray-100 overflow-hidden">
         {image ? (
-          <Image src={image} alt={pkg.name} fill className="object-cover" />
+          <Image
+            src={image}
+            alt={pkg.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 50vw, 33vw"
+            style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Utensils className="w-8 h-8 text-gray-300" />
@@ -181,11 +257,9 @@ function CateringPackageCard({ pkg, onViewDetails }: { pkg: CateringPackage; onV
           ${price}{pricingType === 'flat_fee' ? '' : '/person'}
         </div>
       </div>
-      <div className="p-3">
-        <h4 className="font-semibold text-gray-900 text-sm">{pkg.name || 'Package'}</h4>
-        {pkg.description && (
-          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{pkg.description}</p>
-        )}
+      <div className="p-3 flex flex-col">
+        <h4 className="font-semibold text-gray-900 text-sm line-clamp-2 min-h-[2.5rem]">{pkg.name || 'Package'}</h4>
+        <p className="text-xs text-gray-500 mt-1 line-clamp-2 min-h-[2rem]">{pkg.description || ''}</p>
         <p className="text-xs text-[#44646c] font-medium mt-2">Tap to view details</p>
       </div>
     </button>
@@ -303,9 +377,11 @@ function PackageDetailModal({ pkg, onClose }: { pkg: CateringPackage; onClose: (
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-white overflow-auto">
+      {/* Backdrop to prevent interaction with page behind */}
+      <div className="fixed inset-0 z-[9999] bg-black/50" onClick={onClose} />
+      <div className="fixed inset-0 z-[9999] bg-white overflow-auto">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
+        <header className="sticky top-0 z-[10000] bg-white border-b border-gray-200">
           <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
             <button onClick={onClose} className="flex items-center gap-1 text-gray-700 hover:text-gray-900">
               <ArrowLeft className="w-5 h-5" />
@@ -391,31 +467,31 @@ function PackageDetailModal({ pkg, onClose }: { pkg: CateringPackage; onClose: (
                 Beverages
               </h2>
               {(() => {
-                const hasImages = beverages.some((item: any) => {
+                const hasAnyImages = beverages.some((item: any) => {
                   const bevObj = typeof item === 'string' ? {} : item;
                   return bevObj.image || bevObj.imageUrl;
                 });
 
-                if (hasImages) {
+                if (hasAnyImages) {
                   return (
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {beverages.map((item: any, i: number) => {
                         const bevObj = typeof item === 'string' ? { name: item } : item;
                         const bevImage = bevObj.image || bevObj.imageUrl;
                         return (
-                          <div key={i} className="flex flex-col p-3 bg-blue-50 rounded-xl">
-                            {bevImage ? (
-                              <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-blue-100 mb-2">
+                          <div key={i} className="flex flex-col p-3 bg-gray-50 rounded-xl">
+                            <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-gray-200 mb-2">
+                              {bevImage ? (
                                 <Image src={bevImage} alt={bevObj.name || 'Beverage'} fill className="object-cover" />
-                              </div>
-                            ) : (
-                              <div className="w-full aspect-[4/3] rounded-lg bg-blue-100 mb-2 flex items-center justify-center">
-                                <span className="text-2xl">🥤</span>
-                              </div>
-                            )}
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Utensils className="w-6 h-6 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
                             <p className="font-medium text-gray-900 text-sm line-clamp-2">{bevObj.name}</p>
                             {bevObj.price > 0 && (
-                              <p className="text-sm font-semibold text-blue-600 mt-1">
+                              <p className="text-sm font-semibold text-[#44646c] mt-1">
                                 ${typeof bevObj.price === 'number' ? bevObj.price.toFixed(2) : bevObj.price}
                               </p>
                             )}
@@ -426,17 +502,20 @@ function PackageDetailModal({ pkg, onClose }: { pkg: CateringPackage; onClose: (
                   );
                 }
 
-                // No images - show simple list
+                // No images - show list
                 return (
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
                     {beverages.map((item: any, i: number) => {
-                      const bevName = typeof item === 'string' ? item : item.name;
-                      const bevPrice = typeof item === 'object' ? item.price : null;
+                      const bevObj = typeof item === 'string' ? { name: item } : item;
+                      const bevPrice = bevObj.price;
                       return (
-                        <div key={i} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                          <span className="text-sm text-gray-700">{bevName}</span>
+                        <div key={i} className="flex justify-between items-start py-2 border-b border-gray-100 last:border-0">
+                          <div className="flex-1 min-w-0 pr-4">
+                            <p className="font-medium text-gray-900 text-sm">{bevObj.name}</p>
+                            {bevObj.description && <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{bevObj.description}</p>}
+                          </div>
                           {bevPrice > 0 && (
-                            <span className="text-sm font-medium text-blue-600">${bevPrice}</span>
+                            <span className="font-medium text-gray-900 text-sm">${typeof bevPrice === 'number' ? bevPrice.toFixed(2) : bevPrice}</span>
                           )}
                         </div>
                       );
@@ -454,31 +533,31 @@ function PackageDetailModal({ pkg, onClose }: { pkg: CateringPackage; onClose: (
                 Add-ons
               </h2>
               {(() => {
-                const hasImages = addOns.some((item: any) => {
+                const hasAnyImages = addOns.some((item: any) => {
                   const addOnObj = typeof item === 'string' ? {} : item;
                   return addOnObj.image || addOnObj.imageUrl;
                 });
 
-                if (hasImages) {
+                if (hasAnyImages) {
                   return (
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {addOns.map((item: any, i: number) => {
                         const addOnObj = typeof item === 'string' ? { name: item } : item;
                         const addOnImage = addOnObj.image || addOnObj.imageUrl;
                         return (
-                          <div key={i} className="flex flex-col p-3 bg-amber-50 rounded-xl">
-                            {addOnImage ? (
-                              <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-amber-100 mb-2">
+                          <div key={i} className="flex flex-col p-3 bg-gray-50 rounded-xl">
+                            <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-gray-200 mb-2">
+                              {addOnImage ? (
                                 <Image src={addOnImage} alt={addOnObj.name || 'Add-on'} fill className="object-cover" />
-                              </div>
-                            ) : (
-                              <div className="w-full aspect-[4/3] rounded-lg bg-amber-100 mb-2 flex items-center justify-center">
-                                <span className="text-2xl">✨</span>
-                              </div>
-                            )}
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Utensils className="w-6 h-6 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
                             <p className="font-medium text-gray-900 text-sm line-clamp-2">{addOnObj.name}</p>
                             {addOnObj.price > 0 && (
-                              <p className="text-sm font-semibold text-amber-600 mt-1">
+                              <p className="text-sm font-semibold text-[#44646c] mt-1">
                                 +${typeof addOnObj.price === 'number' ? addOnObj.price.toFixed(2) : addOnObj.price}
                               </p>
                             )}
@@ -489,16 +568,20 @@ function PackageDetailModal({ pkg, onClose }: { pkg: CateringPackage; onClose: (
                   );
                 }
 
-                // No images - show simple list
+                // No images - show list
                 return (
                   <div className="space-y-2">
                     {addOns.map((item: any, i: number) => {
                       const addOnObj = typeof item === 'string' ? { name: item } : item;
+                      const addOnPrice = addOnObj.price;
                       return (
-                        <div key={i} className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
-                          <span className="text-sm text-gray-700">{addOnObj.name}</span>
-                          {addOnObj.price > 0 && (
-                            <span className="text-sm font-medium text-amber-600">+${addOnObj.price}</span>
+                        <div key={i} className="flex justify-between items-start py-2 border-b border-gray-100 last:border-0">
+                          <div className="flex-1 min-w-0 pr-4">
+                            <p className="font-medium text-gray-900 text-sm">{addOnObj.name}</p>
+                            {addOnObj.description && <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{addOnObj.description}</p>}
+                          </div>
+                          {addOnPrice > 0 && (
+                            <span className="font-medium text-gray-900 text-sm">+${typeof addOnPrice === 'number' ? addOnPrice.toFixed(2) : addOnPrice}</span>
                           )}
                         </div>
                       );
@@ -538,7 +621,7 @@ function PackageDetailModal({ pkg, onClose }: { pkg: CateringPackage; onClose: (
               onClick={onClose}
               className="w-full bg-[#44646c] text-white font-semibold py-4 rounded-xl hover:bg-[#3a565d] transition-colors text-lg"
             >
-              Close
+              Book
             </button>
           </div>
         </div>
@@ -566,6 +649,8 @@ export default function ProviderDetailPage() {
   const [showAllAlaCarteItems, setShowAllAlaCarteItems] = useState(false);
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [selectedServiceCategory, setSelectedServiceCategory] = useState<string | null>(null);
+  const [expandedServices, setExpandedServices] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     async function fetchProvider() {
@@ -743,7 +828,8 @@ export default function ProviderDetailPage() {
         highlights.push({ icon: Utensils, title: `${provider.cuisineTypes} Cuisine`, subtitle: 'Authentic flavors & dishes' });
       }
       if (provider.minimumGuarantee) {
-        highlights.push({ icon: DollarSign, title: `$${provider.minimumGuarantee} minimum`, subtitle: 'Minimum order requirement' });
+        const min = String(provider.minimumGuarantee).replace(/^\$/, '');
+        highlights.push({ icon: DollarSign, title: `$${min} minimum`, subtitle: 'Minimum order requirement' });
       }
       if (provider.serviceStyle) {
         highlights.push({ icon: Users, title: provider.serviceStyle, subtitle: 'Service style' });
@@ -767,7 +853,8 @@ export default function ProviderDetailPage() {
         highlights.push({ icon: Clock, title: provider.performanceLength, subtitle: 'Typical performance length' });
       }
       if (provider.compensationFlatFee) {
-        highlights.push({ icon: DollarSign, title: `$${provider.compensationFlatFee} flat fee`, subtitle: 'Starting price' });
+        const fee = String(provider.compensationFlatFee).replace(/^\$/, '');
+        highlights.push({ icon: DollarSign, title: `$${fee} flat fee`, subtitle: 'Starting price' });
       }
     }
 
@@ -788,6 +875,10 @@ export default function ProviderDetailPage() {
     }
 
     if (provider.category === 'Vendors') {
+      // Service category (if vendor provides services)
+      if (provider.serviceCategory) {
+        highlights.push({ icon: CheckCircle2, title: provider.serviceCategory, subtitle: 'Service category' });
+      }
       if (provider.productCategory) {
         highlights.push({ icon: Package, title: provider.productCategory, subtitle: 'Product category' });
       }
@@ -795,7 +886,54 @@ export default function ProviderDetailPage() {
         highlights.push({ icon: CheckCircle2, title: provider.inventoryModel, subtitle: 'Inventory model' });
       }
       if (provider.minimumOrderRequirement) {
-        highlights.push({ icon: DollarSign, title: `$${provider.minimumOrderRequirement} minimum`, subtitle: 'Minimum order' });
+        const min = String(provider.minimumOrderRequirement).replace(/^\$/, '');
+        highlights.push({ icon: DollarSign, title: `$${min} minimum`, subtitle: 'Minimum order' });
+      }
+      // Specializations
+      if (provider.specializations && provider.specializations.length > 0) {
+        highlights.push({ icon: Star, title: provider.specializations.join(', '), subtitle: 'Specializations' });
+      }
+      // Product types
+      if (provider.productTypes && provider.productTypes.length > 0) {
+        highlights.push({ icon: Package, title: provider.productTypes.join(', '), subtitle: 'Product types' });
+      }
+      // Preferred event types
+      if (provider.preferredEventTypes && provider.preferredEventTypes.length > 0) {
+        highlights.push({ icon: Users, title: provider.preferredEventTypes.join(', '), subtitle: 'Ideal for events' });
+      }
+      // Feature flags
+      if (provider.fullyInsured) {
+        highlights.push({ icon: ShieldCheck, title: 'Fully Insured', subtitle: 'Licensed and insured vendor' });
+      }
+      if (provider.sameDayAvailable) {
+        highlights.push({ icon: Clock, title: 'Same-Day Available', subtitle: 'Last-minute bookings accepted' });
+      }
+      if (provider.availableWeekends) {
+        highlights.push({ icon: Clock, title: 'Weekend Availability', subtitle: 'Available on weekends' });
+      }
+      if (provider.ecoFriendly) {
+        highlights.push({ icon: Leaf, title: 'Eco-Friendly', subtitle: 'Sustainable practices' });
+      }
+      if (provider.locallyMade) {
+        highlights.push({ icon: MapPin, title: 'Locally Made', subtitle: 'Supports local community' });
+      }
+      if (provider.customPersonalized) {
+        highlights.push({ icon: Sparkles, title: 'Custom & Personalized', subtitle: 'Made to your specifications' });
+      }
+      if (provider.giftReadyPackaging) {
+        highlights.push({ icon: Package, title: 'Gift-Ready Packaging', subtitle: 'Beautiful presentation included' });
+      }
+      if (provider.bilingual) {
+        highlights.push({ icon: Globe, title: 'Bilingual', subtitle: 'Multiple languages available' });
+      }
+      if (provider.travelFlexible) {
+        highlights.push({ icon: Navigation, title: 'Travel Flexible', subtitle: 'Will travel to your event' });
+      }
+      if (provider.multipleEventsSameDay) {
+        highlights.push({ icon: Users, title: 'Multiple Events', subtitle: 'Can serve multiple events same day' });
+      }
+      if (provider.travelNotes) {
+        highlights.push({ icon: Navigation, title: provider.travelNotes, subtitle: 'Travel policy' });
       }
     }
 
@@ -952,32 +1090,34 @@ export default function ProviderDetailPage() {
               </div>
             </div>
 
-            {/* Highlights Section (Airbnb style) */}
-            {highlights.length > 0 && (
-              <div className="py-6 border-b border-gray-200">
-                <div className="divide-y divide-gray-100">
-                  {visibleHighlights.map((h, i) => (
-                    <HighlightRow key={i} icon={h.icon} title={h.title} subtitle={h.subtitle} />
-                  ))}
+            {/* Service Area Map - Right under location info */}
+            {provider.serviceRadius && provider.serviceRadius > 0 && (
+              <div className="pt-4 pb-6 border-b border-gray-200">
+                <div className="h-[240px] rounded-xl overflow-hidden">
+                  <ServiceAreaMap
+                    lat={provider.lat}
+                    lng={provider.lng}
+                    serviceRadius={provider.serviceRadius}
+                    providerName={provider.name}
+                    city={provider.city}
+                    state={provider.state}
+                    address={provider.address}
+                  />
                 </div>
-                {highlights.length > 3 && (
-                  <button
-                    onClick={() => setShowAllHighlights(!showAllHighlights)}
-                    className="flex items-center gap-1 mt-2 text-sm font-medium text-gray-900 underline"
-                  >
-                    {showAllHighlights ? 'Show less' : `Show all ${highlights.length} highlights`}
-                    {showAllHighlights ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </button>
-                )}
               </div>
             )}
 
             {/* About Section */}
-            {(provider.bio || provider.description) && (
+            {(provider.bio || provider.description || provider.actDescription) && (
               <div className="py-6 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">About {provider.name}</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">
+                  {provider.category === 'Entertainment' ? 'About the Act' : `About ${provider.name}`}
+                </h2>
                 {(() => {
-                  const text = provider.bio || provider.description || '';
+                  // For entertainers, prioritize actDescription
+                  const text = provider.category === 'Entertainment'
+                    ? (provider.actDescription || provider.bio || provider.description || '')
+                    : (provider.bio || provider.description || '');
                   const isLong = text.length > 300;
                   const displayText = showFullDescription || !isLong ? text : text.slice(0, 300) + '...';
                   return (
@@ -994,6 +1134,280 @@ export default function ProviderDetailPage() {
                     </>
                   );
                 })()}
+              </div>
+            )}
+
+            {/* Entertainment-specific: Audio Samples & Performance Info */}
+            {provider.category === 'Entertainment' && (
+              <>
+                {/* Audio/Video Samples */}
+                {((provider.allAudio && provider.allAudio.length > 0) || (provider.allVideos && provider.allVideos.length > 0)) && (
+                  <div className="py-6 border-b border-gray-200">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Samples</h2>
+                    {provider.allAudio && provider.allAudio.length > 0 && (
+                      <div className="mb-4">
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Audio</h3>
+                        <div className="space-y-2">
+                          {provider.allAudio.slice(0, 3).map((audio, i) => (
+                            <audio key={i} controls className="w-full h-10" src={audio}>
+                              Your browser does not support audio.
+                            </audio>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {provider.allVideos && provider.allVideos.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Video</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {provider.allVideos.slice(0, 2).map((video, i) => (
+                            <div key={i} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                              <video controls className="w-full h-full object-cover" src={video}>
+                                Your browser does not support video.
+                              </video>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Performance Details */}
+                {(provider.performanceTypes?.length || provider.performanceStyles?.length || provider.setupTime || provider.amplification) && (
+                  <div className="py-6 border-b border-gray-200">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Performance Details</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {provider.performanceTypes && provider.performanceTypes.length > 0 && (
+                        <div>
+                          <p className="text-sm text-gray-500">Performance Types</p>
+                          <p className="text-sm font-medium text-gray-900">{provider.performanceTypes.join(', ')}</p>
+                        </div>
+                      )}
+                      {provider.performanceStyles && provider.performanceStyles.length > 0 && (
+                        <div>
+                          <p className="text-sm text-gray-500">Styles</p>
+                          <p className="text-sm font-medium text-gray-900">{provider.performanceStyles.join(', ')}</p>
+                        </div>
+                      )}
+                      {provider.setupTime && (
+                        <div>
+                          <p className="text-sm text-gray-500">Setup Time</p>
+                          <p className="text-sm font-medium text-gray-900">{provider.setupTime}</p>
+                        </div>
+                      )}
+                      {provider.teardownTime && (
+                        <div>
+                          <p className="text-sm text-gray-500">Teardown Time</p>
+                          <p className="text-sm font-medium text-gray-900">{provider.teardownTime}</p>
+                        </div>
+                      )}
+                      {provider.amplification && (
+                        <div>
+                          <p className="text-sm text-gray-500">Amplification</p>
+                          <p className="text-sm font-medium text-gray-900">{provider.amplification}</p>
+                        </div>
+                      )}
+                      {provider.performanceAreaRequirements && (
+                        <div className="sm:col-span-2">
+                          <p className="text-sm text-gray-500">Space Requirements</p>
+                          <p className="text-sm font-medium text-gray-900">{provider.performanceAreaRequirements}</p>
+                        </div>
+                      )}
+                      {provider.technicalRequirements && (
+                        <div className="sm:col-span-2">
+                          <p className="text-sm text-gray-500">Technical Requirements</p>
+                          <p className="text-sm font-medium text-gray-900">{provider.technicalRequirements}</p>
+                        </div>
+                      )}
+                    </div>
+                    {provider.achievements && (
+                      <div className="mt-4 p-3 bg-amber-50 rounded-lg">
+                        <p className="text-sm text-amber-800">{provider.achievements}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Food & Beverage-specific: Service Options */}
+            {provider.category === 'FoodBeverage' && (provider.offersPickup || provider.offersDelivery || provider.offersOnSite || provider.hoursOfOperation) && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Service Options</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Service types */}
+                  <div className="sm:col-span-2">
+                    <div className="flex flex-wrap gap-2">
+                      {provider.offersOnSite && (
+                        <span className="px-3 py-1.5 bg-green-50 text-green-700 text-sm font-medium rounded-full">
+                          On-site Service
+                        </span>
+                      )}
+                      {provider.offersDelivery && (
+                        <span className="px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-medium rounded-full">
+                          Delivery Available {provider.deliveryFee && `($${provider.deliveryFee})`}
+                        </span>
+                      )}
+                      {provider.offersPickup && (
+                        <span className="px-3 py-1.5 bg-purple-50 text-purple-700 text-sm font-medium rounded-full">
+                          Pickup Available
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {provider.pickupLocation && (
+                    <div>
+                      <p className="text-sm text-gray-500">Pickup Location</p>
+                      <p className="text-sm font-medium text-gray-900">{provider.pickupLocation}</p>
+                    </div>
+                  )}
+                  {provider.hoursOfOperation && (
+                    <div>
+                      <p className="text-sm text-gray-500">Hours of Operation</p>
+                      <p className="text-sm font-medium text-gray-900">{provider.hoursOfOperation}</p>
+                    </div>
+                  )}
+                  {provider.daysOfOperation && provider.daysOfOperation.length > 0 && (
+                    <div>
+                      <p className="text-sm text-gray-500">Available Days</p>
+                      <p className="text-sm font-medium text-gray-900">{provider.daysOfOperation.join(', ')}</p>
+                    </div>
+                  )}
+                  {provider.foodTruckDimensions && (
+                    <div>
+                      <p className="text-sm text-gray-500">Food Truck Dimensions</p>
+                      <p className="text-sm font-medium text-gray-900">{provider.foodTruckDimensions}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Venues-specific: Spaces Section */}
+            {provider.category === 'Venues' && provider.venueSpaces && provider.venueSpaces.length > 0 && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Available Spaces</h2>
+                <div className="space-y-4">
+                  {provider.venueSpaces.map((space, index) => (
+                    <div key={space.id || index} className="border border-gray-200 rounded-xl p-4">
+                      {space.photos && space.photos.length > 0 && (
+                        <div className="relative h-40 rounded-lg overflow-hidden bg-gray-100 mb-3">
+                          <Image src={space.photos[0]} alt={space.name} fill className="object-cover" />
+                        </div>
+                      )}
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{space.name}</h3>
+                          {space.description && (
+                            <p className="text-sm text-gray-500 mt-1">{space.description}</p>
+                          )}
+                        </div>
+                        {space.hourlyRate && (
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-gray-900">${space.hourlyRate}</p>
+                            <p className="text-xs text-gray-500">/hour</p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-600">
+                        {space.squareFeet && (
+                          <span>{space.squareFeet.toLocaleString()} sq ft</span>
+                        )}
+                        {space.seatedCapacity && (
+                          <span>{space.seatedCapacity} seated</span>
+                        )}
+                        {space.standingCapacity && (
+                          <span>{space.standingCapacity} standing</span>
+                        )}
+                      </div>
+                      {space.amenities && space.amenities.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-3">
+                          {space.amenities.slice(0, 5).map((amenity, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                              {amenity}
+                            </span>
+                          ))}
+                          {space.amenities.length > 5 && (
+                            <span className="px-2 py-0.5 text-gray-500 text-xs">
+                              +{space.amenities.length - 5} more
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Venues-specific: House Rules & Policies */}
+            {provider.category === 'Venues' && (provider.houseRules?.length || provider.noiseCurfew || provider.allowOutsideVendors !== undefined) && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">House Rules & Policies</h2>
+                <div className="space-y-3">
+                  {provider.houseRules && provider.houseRules.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-2">House Rules</p>
+                      <ul className="space-y-1.5">
+                        {provider.houseRules.map((rule, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                            <span className="text-gray-400 mt-0.5">-</span>
+                            {rule}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {provider.noiseCurfew && (
+                      <div>
+                        <p className="text-sm text-gray-500">Noise Curfew</p>
+                        <p className="text-sm font-medium text-gray-900">{provider.noiseCurfew}</p>
+                      </div>
+                    )}
+                    {provider.minimumHours && (
+                      <div>
+                        <p className="text-sm text-gray-500">Minimum Hours</p>
+                        <p className="text-sm font-medium text-gray-900">{provider.minimumHours} hours</p>
+                      </div>
+                    )}
+                    {provider.cleaningFee && (
+                      <div>
+                        <p className="text-sm text-gray-500">Cleaning Fee</p>
+                        <p className="text-sm font-medium text-gray-900">${provider.cleaningFee}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm text-gray-500">Outside Vendors</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {provider.allowOutsideVendors ? 'Allowed' : 'Not allowed'}
+                        {provider.preferredVendorList && ' (preferred vendor list available)'}
+                      </p>
+                    </div>
+                    {provider.requiresInsurance && (
+                      <div>
+                        <p className="text-sm text-gray-500">Insurance</p>
+                        <p className="text-sm font-medium text-gray-900">Required for events</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Venues-specific: Accessibility */}
+            {provider.category === 'Venues' && provider.accessibility && provider.accessibility.length > 0 && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Accessibility</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {provider.accessibility.map((feature, index) => (
+                    <div key={index} className="flex items-center gap-3 text-sm text-gray-700">
+                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      <span>{feature}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -1022,16 +1436,26 @@ export default function ProviderDetailPage() {
 
                 {/* A La Carte */}
                 {selectedMenuType === 'alacarte' && provider.aLaCarteMenu && provider.aLaCarteMenu.length > 0 && (() => {
-                  const hasImages = provider.aLaCarteMenu.some(item => item.image || item.imageUrl);
-                  const displayedItems = showAllAlaCarteItems ? provider.aLaCarteMenu : provider.aLaCarteMenu.slice(0, hasImages ? 8 : 6);
-                  const remainingCount = provider.aLaCarteMenu.length - (hasImages ? 8 : 6);
+                  // Helper to check if an image URL is valid (not empty, not placeholder)
+                  const isValidImage = (url: string | undefined | null): boolean => {
+                    if (!url) return false;
+                    const trimmed = url.trim();
+                    return trimmed !== '' && trimmed.startsWith('http');
+                  };
+
+                  // Count items with valid images - only show grid if majority have images
+                  const itemsWithImages = provider.aLaCarteMenu.filter(item => isValidImage(item.image) || isValidImage(item.imageUrl)).length;
+                  const hasImages = itemsWithImages >= Math.ceil(provider.aLaCarteMenu.length / 2);
+
+                  const displayedItems = showAllAlaCarteItems ? provider.aLaCarteMenu : provider.aLaCarteMenu.slice(0, 6);
+                  const remainingCount = provider.aLaCarteMenu.length - 6;
 
                   if (hasImages) {
                     return (
                       <div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                           {displayedItems.map((item, index) => {
-                            const itemImage = item.image || item.imageUrl;
+                            const itemImage = isValidImage(item.image) ? item.image : isValidImage(item.imageUrl) ? item.imageUrl : null;
                             return (
                               <div key={item.id || index} className="flex flex-col p-3 bg-gray-50 rounded-xl">
                                 {itemImage ? (
@@ -1064,7 +1488,7 @@ export default function ProviderDetailPage() {
                             +{remainingCount} more items
                           </button>
                         )}
-                        {showAllAlaCarteItems && provider.aLaCarteMenu.length > 8 && (
+                        {showAllAlaCarteItems && provider.aLaCarteMenu.length > 6 && (
                           <button
                             onClick={() => setShowAllAlaCarteItems(false)}
                             className="text-sm text-[#44646c] font-medium mt-4 hover:underline"
@@ -1076,7 +1500,7 @@ export default function ProviderDetailPage() {
                     );
                   }
 
-                  // No images - show list format
+                  // No images (or very few) - show list format
                   return (
                     <div className="space-y-3">
                       {displayedItems.map((item, index) => (
@@ -1133,6 +1557,77 @@ export default function ProviderDetailPage() {
               </div>
             )}
 
+            {/* Highlights Section - Below Menu */}
+            {highlights.length > 0 && (
+              <div id="highlights-section" className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Details</h2>
+                <div className="divide-y divide-gray-100">
+                  {visibleHighlights.map((h, i) => (
+                    <HighlightRow key={i} icon={h.icon} title={h.title} subtitle={h.subtitle} />
+                  ))}
+                </div>
+                {highlights.length > 3 && (
+                  <button
+                    onClick={() => setShowAllHighlights(!showAllHighlights)}
+                    className="flex items-center gap-1 mt-2 text-sm font-medium text-gray-900 underline"
+                  >
+                    {showAllHighlights ? 'Show less' : `Show all ${highlights.length} details`}
+                    {showAllHighlights ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Vendor Business Info */}
+            {provider.category === 'Vendors' && (provider.businessType || provider.serviceDescription || provider.productDescription || provider.averagePriceRange) && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Business Info</h2>
+                <div className="space-y-4">
+                  {provider.businessType && (
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1.5 text-sm font-medium rounded-full ${
+                        provider.businessType === 'services' || provider.businessType === 'service'
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'bg-green-50 text-green-700'
+                      }`}>
+                        {provider.businessType === 'services' || provider.businessType === 'service' ? 'Service Provider' : 'Product Vendor'}
+                      </span>
+                    </div>
+                  )}
+                  {provider.serviceDescription && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">What we offer</p>
+                      <p className="text-sm text-gray-900">{provider.serviceDescription}</p>
+                    </div>
+                  )}
+                  {provider.productDescription && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Our products</p>
+                      <p className="text-sm text-gray-900">{provider.productDescription}</p>
+                    </div>
+                  )}
+                  {provider.averagePriceRange && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Price Range</p>
+                      <p className="text-sm font-medium text-gray-900">{provider.averagePriceRange}</p>
+                    </div>
+                  )}
+                  {provider.preferredEventTypes && provider.preferredEventTypes.length > 0 && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-2">Ideal for</p>
+                      <div className="flex flex-wrap gap-2">
+                        {provider.preferredEventTypes.map((eventType, i) => (
+                          <span key={i} className="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
+                            {eventType}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Services Offered (for Vendors) */}
             {provider.category === 'Vendors' && provider.serviceItems && provider.serviceItems.length > 0 && (
               <div className="py-6 border-b border-gray-200">
@@ -1144,11 +1639,18 @@ export default function ProviderDetailPage() {
                   if (categories.length > 1) {
                     return (
                       <div className="flex flex-wrap gap-2 mb-4">
-                        <button className="px-4 py-2 rounded-full text-sm font-medium bg-[#44646c] text-white">
+                        <button
+                          onClick={() => setSelectedServiceCategory(null)}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedServiceCategory === null ? 'bg-[#44646c] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                        >
                           All
                         </button>
                         {categories.map((cat, i) => (
-                          <button key={i} className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
+                          <button
+                            key={i}
+                            onClick={() => setSelectedServiceCategory(cat)}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedServiceCategory === cat ? 'bg-[#44646c] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                          >
                             {cat}
                           </button>
                         ))}
@@ -1159,7 +1661,9 @@ export default function ProviderDetailPage() {
                 })()}
 
                 <div className="space-y-4">
-                  {provider.serviceItems.map((service: any, index: number) => {
+                  {provider.serviceItems
+                    .filter((service: any) => selectedServiceCategory === null || service.category === selectedServiceCategory)
+                    .map((service: any, index: number) => {
                     const serviceImage = service.image || service.photo || (service.photos && service.photos[0]);
                     return (
                       <div key={index} className="border border-gray-200 rounded-xl p-4">
@@ -1195,7 +1699,27 @@ export default function ProviderDetailPage() {
                           )}
                         </div>
                         {service.serviceDetails && (
-                          <p className="text-sm text-gray-600 mt-3 line-clamp-3">{service.serviceDetails}</p>
+                          <div className="mt-3">
+                            <p className={`text-sm text-gray-600 ${!expandedServices.has(index) ? 'line-clamp-3' : ''}`}>
+                              {service.serviceDetails}
+                            </p>
+                            {service.serviceDetails.length > 150 && (
+                              <button
+                                onClick={() => {
+                                  const newExpanded = new Set(expandedServices);
+                                  if (expandedServices.has(index)) {
+                                    newExpanded.delete(index);
+                                  } else {
+                                    newExpanded.add(index);
+                                  }
+                                  setExpandedServices(newExpanded);
+                                }}
+                                className="text-sm font-medium text-[#44646c] mt-1 hover:underline"
+                              >
+                                {expandedServices.has(index) ? 'Show less' : 'Read more'}
+                              </button>
+                            )}
+                          </div>
                         )}
                         {service.maxQuantity && (
                           <p className="text-xs text-gray-500 mt-2">Max quantity: {service.maxQuantity}</p>
@@ -1341,22 +1865,6 @@ export default function ProviderDetailPage() {
               </div>
             )}
 
-            {/* Service Area Map Section */}
-            {provider.serviceRadius && provider.serviceRadius > 0 && (
-              <div className="py-6 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Service area</h2>
-                <div className="h-[300px] rounded-xl overflow-hidden">
-                  <ServiceAreaMap
-                    lat={provider.lat}
-                    lng={provider.lng}
-                    serviceRadius={provider.serviceRadius}
-                    providerName={provider.name}
-                    city={provider.city}
-                    state={provider.state}
-                  />
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Sidebar - Booking Card */}
@@ -1366,25 +1874,25 @@ export default function ProviderDetailPage() {
               <div className="mb-4">
                 {provider.category === 'FoodBeverage' && provider.minimumGuarantee && (
                   <>
-                    <span className="text-xl font-semibold">${provider.minimumGuarantee}</span>
+                    <span className="text-xl font-semibold">${String(provider.minimumGuarantee).replace(/^\$/, '')}</span>
                     <span className="text-gray-500 text-sm"> minimum</span>
                   </>
                 )}
                 {provider.category === 'Entertainment' && provider.compensationFlatFee && (
                   <>
-                    <span className="text-xl font-semibold">${provider.compensationFlatFee}</span>
+                    <span className="text-xl font-semibold">${String(provider.compensationFlatFee).replace(/^\$/, '')}</span>
                     <span className="text-gray-500 text-sm"> starting</span>
                   </>
                 )}
                 {provider.category === 'Venues' && (provider.rentalFeeHourly || provider.rentalFeeFlat) && (
                   <>
-                    <span className="text-xl font-semibold">${provider.rentalFeeHourly || provider.rentalFeeFlat}</span>
+                    <span className="text-xl font-semibold">${String(provider.rentalFeeHourly || provider.rentalFeeFlat).replace(/^\$/, '')}</span>
                     <span className="text-gray-500 text-sm">{provider.rentalFeeHourly ? ' /hour' : ' flat'}</span>
                   </>
                 )}
                 {provider.category === 'Vendors' && provider.minimumOrderRequirement && (
                   <>
-                    <span className="text-xl font-semibold">${provider.minimumOrderRequirement}</span>
+                    <span className="text-xl font-semibold">${String(provider.minimumOrderRequirement).replace(/^\$/, '')}</span>
                     <span className="text-gray-500 text-sm"> minimum order</span>
                   </>
                 )}
@@ -1431,6 +1939,39 @@ export default function ProviderDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Highlights/Stats - Show only 3 */}
+              {highlights.length > 0 && (
+                <div className="mt-5 pt-5 border-t">
+                  <h3 className="font-semibold text-gray-900 text-sm mb-3">At a glance</h3>
+                  <div className="space-y-3">
+                    {highlights.slice(0, 3).map((h, i) => {
+                      const Icon = h.icon;
+                      return (
+                        <div key={i} className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
+                            <Icon className="w-4 h-4 text-gray-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{h.title}</p>
+                            <p className="text-xs text-gray-500">{h.subtitle}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {highlights.length > 3 && (
+                    <button
+                      onClick={() => {
+                        document.getElementById('highlights-section')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="mt-3 text-sm font-medium text-[#44646c] underline hover:text-[#3a565d]"
+                    >
+                      View all {highlights.length} details
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Social Media */}
               {provider.socialMedia && (provider.socialMedia.instagram || provider.socialMedia.facebook) && (

@@ -26,6 +26,7 @@ interface ServiceAreaMapProps {
   providerName: string;
   city?: string;
   state?: string;
+  address?: string;
 }
 
 export default function ServiceAreaMap(props: ServiceAreaMapProps) {

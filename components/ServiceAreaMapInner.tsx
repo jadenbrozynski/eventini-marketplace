@@ -23,6 +23,7 @@ interface ServiceAreaMapInnerProps {
   providerName: string;
   city?: string;
   state?: string;
+  address?: string;
 }
 
 // Convert miles to meters
@@ -63,6 +64,31 @@ function getDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): 
   return R * c;
 }
 
+// Geocode an address using OpenStreetMap's Nominatim API
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+      {
+        headers: {
+          'User-Agent': 'Eventini-Marketplace/1.0',
+        },
+      }
+    );
+    const data = await response.json();
+    if (data && data.length > 0) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon),
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Geocoding error:', error);
+    return null;
+  }
+}
+
 export default function ServiceAreaMapInner({
   lat,
   lng,
@@ -70,18 +96,38 @@ export default function ServiceAreaMapInner({
   providerName,
   city,
   state,
+  address,
 }: ServiceAreaMapInnerProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const [geocodedLocation, setGeocodedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isGeocoding, setIsGeocoding] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // If no coordinates, show fallback UI (no map)
-  // Check for null, undefined, and 0 values
-  const hasLocation = lat != null && lng != null && lat !== 0 && lng !== 0 && !isNaN(lat) && !isNaN(lng);
-  const centerLat = hasLocation ? lat! : 39.8283;
-  const centerLng = hasLocation ? lng! : -98.5795;
+  // If no coordinates provided, try to geocode from city/state or address
+  useEffect(() => {
+    const hasProvidedLocation = lat != null && lng != null && lat !== 0 && lng !== 0 && !isNaN(lat) && !isNaN(lng);
+
+    if (!hasProvidedLocation && (city || state || address)) {
+      setIsGeocoding(true);
+      const searchAddress = address || [city, state].filter(Boolean).join(', ');
+
+      geocodeAddress(searchAddress).then((result) => {
+        if (result) {
+          setGeocodedLocation(result);
+        }
+        setIsGeocoding(false);
+      });
+    }
+  }, [lat, lng, city, state, address]);
+
+  // Check for valid coordinates from props or geocoding
+  const hasProvidedLocation = lat != null && lng != null && lat !== 0 && lng !== 0 && !isNaN(lat) && !isNaN(lng);
+  const hasLocation = hasProvidedLocation || geocodedLocation != null;
+  const centerLat = hasProvidedLocation ? lat! : geocodedLocation?.lat || 39.8283;
+  const centerLng = hasProvidedLocation ? lng! : geocodedLocation?.lng || -98.5795;
 
   // Calculate hexes for service area
   const hexData = useMemo(() => {
@@ -116,12 +162,12 @@ export default function ServiceAreaMapInner({
     });
   }, []);
 
-  if (!isMounted) {
+  if (!isMounted || isGeocoding) {
     return (
       <div className="h-full w-full bg-gray-100 rounded-xl flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-gray-300 border-t-[#44646c] rounded-full animate-spin mx-auto mb-2" />
-          <p className="text-sm text-gray-500">Loading map...</p>
+          <p className="text-sm text-gray-500">{isGeocoding ? 'Finding location...' : 'Loading map...'}</p>
         </div>
       </div>
     );
@@ -147,17 +193,17 @@ export default function ServiceAreaMapInner({
     );
   }
 
-  // Calculate zoom level based on service radius
+  // Calculate zoom level based on service radius (higher number = more zoomed in)
   const getZoomFromRadius = (radius: number): number => {
-    if (radius <= 10) return 10;
-    if (radius <= 25) return 9;
-    if (radius <= 50) return 8;
-    if (radius <= 100) return 7;
-    return 6;
+    if (radius <= 10) return 9;
+    if (radius <= 25) return 8;
+    if (radius <= 50) return 7;
+    if (radius <= 100) return 6;
+    return 5;
   };
 
   return (
-    <div className="h-full w-full relative rounded-xl overflow-hidden">
+    <div className="h-full w-full relative rounded-xl overflow-hidden" style={{ zIndex: 0 }}>
       <MapContainer
         center={[centerLat, centerLng]}
         zoom={getZoomFromRadius(serviceRadius)}
@@ -208,7 +254,7 @@ export default function ServiceAreaMapInner({
       </MapContainer>
 
       {/* Service radius badge */}
-      <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-md z-[1000]">
+      <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-md z-[10]">
         <p className="text-xs text-gray-500">Service area</p>
         <p className="text-sm font-semibold text-gray-900">{serviceRadius} mile radius</p>
       </div>

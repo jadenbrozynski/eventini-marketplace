@@ -8,20 +8,47 @@ const CATEGORY_COLLECTIONS = {
   Vendors: 'Providers/Vendors/providers',
 };
 
-function extractName(data: Record<string, unknown>): string {
-  return (
-    (data.businessTitle as string) ||
-    (data.businessName as string) ||
-    (data.name as string) ||
-    (data.providerName as string) ||
-    (data.vendorName as string) ||
-    (data.stageArtistName as string) ||
-    (data.stageName as string) ||
-    (data.actName as string) ||
-    (data.venueName as string) ||
-    (data.contactName as string) ||
-    ''
-  );
+// Category-aware name extraction matching EventiniMockUp's getProviderDisplayName
+function extractName(data: Record<string, unknown>, category?: string): string {
+  const formData = (data.formData as Record<string, unknown>) || {};
+  const cat = (category || (data.category as string) || '').toLowerCase();
+
+  const checkValue = (val: unknown): val is string =>
+    typeof val === 'string' && val !== 'N/A' && val.trim() !== '';
+
+  // Venues: prioritize venueName
+  if (cat.includes('venue')) {
+    if (checkValue(data.venueName)) return data.venueName;
+    if (checkValue(formData.venueName)) return formData.venueName as string;
+    if (checkValue(data.businessName)) return data.businessName as string;
+    if (checkValue(formData.businessName)) return formData.businessName as string;
+    if (checkValue(formData.businessTitle)) return formData.businessTitle as string;
+  }
+
+  // Entertainment: prioritize stageName/stageArtistName
+  if (cat.includes('entertainment')) {
+    if (checkValue(data.stageName)) return data.stageName as string;
+    if (checkValue(formData.stageName)) return formData.stageName as string;
+    if (checkValue(formData.stageArtistName)) return formData.stageArtistName as string;
+    if (checkValue(data.businessName)) return data.businessName as string;
+    if (checkValue(formData.businessName)) return formData.businessName as string;
+  }
+
+  // F&B, Vendors, etc.: prioritize businessName/businessTitle
+  if (checkValue(data.businessName)) return data.businessName as string;
+  if (checkValue(formData.businessName)) return formData.businessName as string;
+  if (checkValue(data.businessTitle)) return data.businessTitle as string;
+  if (checkValue(formData.businessTitle)) return formData.businessTitle as string;
+  if (checkValue(data.stageName)) return data.stageName as string;
+  if (checkValue(data.venueName)) return data.venueName as string;
+
+  // Fallback to any name field
+  if (checkValue(data.name)) return data.name as string;
+  if (checkValue(data.providerName)) return data.providerName as string;
+  if (checkValue(data.vendorName)) return data.vendorName as string;
+  if (checkValue(data.contactName)) return data.contactName as string;
+
+  return '';
 }
 
 function extractImageUrls(data: Record<string, unknown>): string[] {
@@ -153,28 +180,285 @@ export async function GET(
     const pricingDetails = (detailsSubcollection.pricing as Record<string, unknown>) || {};
     const socialMedia = (data.socialMedia as Record<string, unknown>) || {};
 
+    // Helper to get coordinates from multiple possible sources (matching EventiniMockUp pattern)
+    const getCoordinates = (): { lat: number | null; lng: number | null } => {
+      // Check direct coordinates
+      if (data.lat && data.lng) return { lat: data.lat as number, lng: data.lng as number };
+      if (data.latitude && data.longitude) return { lat: data.latitude as number, lng: data.longitude as number };
+      if ((data.coordinates as any)?.lat && (data.coordinates as any)?.lng) {
+        return { lat: (data.coordinates as any).lat, lng: (data.coordinates as any).lng };
+      }
+      if ((data.location as any)?.lat && (data.location as any)?.lng) {
+        return { lat: (data.location as any).lat, lng: (data.location as any).lng };
+      }
+
+      // Check formData coordinates
+      if ((formData.coordinates as any)?.lat && (formData.coordinates as any)?.lng) {
+        return { lat: (formData.coordinates as any).lat, lng: (formData.coordinates as any).lng };
+      }
+      if (formData.latitude && formData.longitude) {
+        return { lat: formData.latitude as number, lng: formData.longitude as number };
+      }
+
+      // Check geocoded coordinates (cached from previous geocoding)
+      if ((data.geocodedCoordinates as any)?.lat && (data.geocodedCoordinates as any)?.lng) {
+        return { lat: (data.geocodedCoordinates as any).lat, lng: (data.geocodedCoordinates as any).lng };
+      }
+
+      // Check category-specific details for coordinates
+      if ((foodBeverageDetails.coordinates as any)?.lat && (foodBeverageDetails.coordinates as any)?.lng) {
+        return { lat: (foodBeverageDetails.coordinates as any).lat, lng: (foodBeverageDetails.coordinates as any).lng };
+      }
+      if ((foodBeverageDetails.serviceAreaCoordinates as any)?.lat && (foodBeverageDetails.serviceAreaCoordinates as any)?.lng) {
+        return { lat: (foodBeverageDetails.serviceAreaCoordinates as any).lat, lng: (foodBeverageDetails.serviceAreaCoordinates as any).lng };
+      }
+      if ((entertainmentDetails.coordinates as any)?.lat && (entertainmentDetails.coordinates as any)?.lng) {
+        return { lat: (entertainmentDetails.coordinates as any).lat, lng: (entertainmentDetails.coordinates as any).lng };
+      }
+      if ((entertainmentDetails.serviceAreaCoordinates as any)?.lat && (entertainmentDetails.serviceAreaCoordinates as any)?.lng) {
+        return { lat: (entertainmentDetails.serviceAreaCoordinates as any).lat, lng: (entertainmentDetails.serviceAreaCoordinates as any).lng };
+      }
+      if ((vendorDetails.coordinates as any)?.lat && (vendorDetails.coordinates as any)?.lng) {
+        return { lat: (vendorDetails.coordinates as any).lat, lng: (vendorDetails.coordinates as any).lng };
+      }
+      if ((vendorDetails.serviceAreaCoordinates as any)?.lat && (vendorDetails.serviceAreaCoordinates as any)?.lng) {
+        return { lat: (vendorDetails.serviceAreaCoordinates as any).lat, lng: (vendorDetails.serviceAreaCoordinates as any).lng };
+      }
+      if ((venueDetails.coordinates as any)?.lat && (venueDetails.coordinates as any)?.lng) {
+        return { lat: (venueDetails.coordinates as any).lat, lng: (venueDetails.coordinates as any).lng };
+      }
+
+      // Category-specific coordinate fields
+      if (category === 'Venues') {
+        // Venues: check venue-specific coordinate fields
+        if ((formData.venueCoordinates as any)?.lat && (formData.venueCoordinates as any)?.lng) {
+          return { lat: (formData.venueCoordinates as any).lat, lng: (formData.venueCoordinates as any).lng };
+        }
+        if ((data.venueCoordinates as any)?.lat && (data.venueCoordinates as any)?.lng) {
+          return { lat: (data.venueCoordinates as any).lat, lng: (data.venueCoordinates as any).lng };
+        }
+      } else {
+        // Mobile providers: check service area coordinates
+        if ((formData.serviceAreaCoordinates as any)?.lat && (formData.serviceAreaCoordinates as any)?.lng) {
+          return { lat: (formData.serviceAreaCoordinates as any).lat, lng: (formData.serviceAreaCoordinates as any).lng };
+        }
+        if ((data.serviceAreaCoordinates as any)?.lat && (data.serviceAreaCoordinates as any)?.lng) {
+          return { lat: (data.serviceAreaCoordinates as any).lat, lng: (data.serviceAreaCoordinates as any).lng };
+        }
+      }
+
+      return { lat: null, lng: null };
+    };
+
+    // Helper to get serviceLocation (full "City, State" string from onboarding)
+    const getServiceLocation = (): string | null => {
+      // PRIORITY 1: serviceLocation (unique per-provider from "Where will you offer your services?")
+      if (formData.serviceLocation) return formData.serviceLocation as string;
+      if (data.serviceLocation) return data.serviceLocation as string;
+
+      // PRIORITY 2: serviceAreaLocation (fallback)
+      if (formData.serviceAreaLocation) return formData.serviceAreaLocation as string;
+      if (data.serviceAreaLocation) return data.serviceAreaLocation as string;
+
+      // PRIORITY 3: Check category-specific details
+      if (foodBeverageDetails.serviceLocation) return foodBeverageDetails.serviceLocation as string;
+      if (foodBeverageDetails.serviceAreaLocation) return foodBeverageDetails.serviceAreaLocation as string;
+      if (entertainmentDetails.serviceLocation) return entertainmentDetails.serviceLocation as string;
+      if (vendorDetails.serviceLocation) return vendorDetails.serviceLocation as string;
+
+      return null;
+    };
+
+    // Helper to get city from multiple sources (matching EventiniMockUp pattern)
+    const getCity = (): string | null => {
+      // Try to extract from serviceLocation first
+      const serviceLocation = getServiceLocation();
+      if (serviceLocation && serviceLocation.includes(',')) {
+        const parts = serviceLocation.split(',').map(p => p.trim());
+        if (parts.length >= 2) return parts[0];
+      }
+
+      // Direct city field
+      if (data.city) return data.city as string;
+      if (formData.city) return formData.city as string;
+
+      // Residential address (for mobile providers)
+      if ((data.residentialAddress as any)?.city) return (data.residentialAddress as any).city;
+      if ((formData.residentialAddress as any)?.city) return (formData.residentialAddress as any).city;
+
+      // Business city
+      if (data.businessCity) return data.businessCity as string;
+      if (formData.businessCity) return formData.businessCity as string;
+
+      // Category-specific fields
+      if (category === 'Venues') {
+        if (formData.venueCity) return formData.venueCity as string;
+        if ((formData.venueAddress as any)?.city) return (formData.venueAddress as any).city;
+        if ((formData.address as any)?.city) return (formData.address as any).city;
+      }
+
+      if (category === 'Entertainment') {
+        // basedIn might be "City, State" format
+        const basedIn = data.basedIn || formData.basedIn || entertainmentDetails.basedIn;
+        if (basedIn && typeof basedIn === 'string' && basedIn.includes(',')) {
+          const parts = (basedIn as string).split(',').map(p => p.trim());
+          if (parts.length >= 2) return parts[0];
+        }
+        if (basedIn && typeof basedIn === 'string' && !basedIn.includes(',')) {
+          return basedIn as string;
+        }
+      }
+
+      // Try to parse from location string
+      const location = data.location as string;
+      if (location && location.includes(',')) {
+        const parts = location.split(',').map(p => p.trim());
+        if (parts.length >= 2) {
+          // Handle "City, State" or "Street, City, State, Zip"
+          if (parts.length === 2) return parts[0];
+          // For longer addresses, city is usually second-to-last or third-to-last
+          const lastPart = parts[parts.length - 1];
+          if (/^\d{5}/.test(lastPart)) {
+            // Last is zip, city is third from end
+            return parts.length >= 3 ? parts[parts.length - 3] : parts[0];
+          }
+          return parts.length >= 3 ? parts[parts.length - 2] : parts[0];
+        }
+      }
+
+      return null;
+    };
+
+    // Helper to get state from multiple sources
+    const getState = (): string | null => {
+      // Try to extract from serviceLocation first
+      const serviceLocation = getServiceLocation();
+      if (serviceLocation && serviceLocation.includes(',')) {
+        const parts = serviceLocation.split(',').map(p => p.trim());
+        if (parts.length >= 2) return parts[1];
+      }
+
+      // Direct state field
+      if (data.state) return data.state as string;
+      if (formData.state) return formData.state as string;
+
+      // Residential address
+      if ((data.residentialAddress as any)?.state) return (data.residentialAddress as any).state;
+      if ((formData.residentialAddress as any)?.state) return (formData.residentialAddress as any).state;
+
+      // Business state
+      if (data.businessState) return data.businessState as string;
+      if (formData.businessState) return formData.businessState as string;
+
+      // Category-specific
+      if (category === 'Venues') {
+        if (formData.venueState) return formData.venueState as string;
+        if ((formData.venueAddress as any)?.state) return (formData.venueAddress as any).state;
+        if ((formData.address as any)?.state) return (formData.address as any).state;
+      }
+
+      if (category === 'Entertainment') {
+        const basedIn = data.basedIn || formData.basedIn || entertainmentDetails.basedIn;
+        if (basedIn && typeof basedIn === 'string' && basedIn.includes(',')) {
+          const parts = (basedIn as string).split(',').map(p => p.trim());
+          if (parts.length >= 2) return parts[1];
+        }
+      }
+
+      // Try to parse from location string
+      const location = data.location as string;
+      if (location && location.includes(',')) {
+        const parts = location.split(',').map(p => p.trim());
+        if (parts.length >= 2) {
+          const lastPart = parts[parts.length - 1];
+          // Check if last part is zip code
+          if (/^\d{5}/.test(lastPart) && parts.length >= 3) {
+            return parts[parts.length - 2];
+          }
+          // Check if last part is a state abbreviation
+          if (lastPart.length === 2 && /^[A-Z]{2}$/i.test(lastPart)) {
+            return lastPart.toUpperCase();
+          }
+          return parts[parts.length - 1];
+        }
+      }
+
+      return null;
+    };
+
+    // Helper to get address from multiple sources
+    const getAddress = (): string | null => {
+      if (data.address) return data.address as string;
+      if (formData.address && typeof formData.address === 'string') return formData.address as string;
+
+      // Full location string
+      if (data.location) return data.location as string;
+
+      // Residential address
+      if ((data.residentialAddress as any)?.street) return (data.residentialAddress as any).street;
+      if ((formData.residentialAddress as any)?.street) return (formData.residentialAddress as any).street;
+
+      // Business address
+      if (data.businessAddress) return data.businessAddress as string;
+      if (formData.businessAddress) return formData.businessAddress as string;
+
+      if (category === 'Venues') {
+        if (formData.venueAddress && typeof formData.venueAddress === 'string') return formData.venueAddress as string;
+        if ((formData.venueAddress as any)?.street) return (formData.venueAddress as any).street;
+      }
+      return null;
+    };
+
+    // Helper to get service radius from multiple sources
+    const getServiceRadius = (): number | null => {
+      if (data.serviceRadius) return data.serviceRadius as number;
+      if (formData.serviceRadius) return formData.serviceRadius as number;
+
+      // Check category-specific details
+      if (foodBeverageDetails.serviceRadius) return foodBeverageDetails.serviceRadius as number;
+      if (entertainmentDetails.serviceRadius) return entertainmentDetails.serviceRadius as number;
+      if (vendorDetails.serviceRadius) return vendorDetails.serviceRadius as number;
+
+      // driveTime is sometimes used instead of serviceRadius
+      const driveTime = data.driveTime || formData.driveTime ||
+                        foodBeverageDetails.driveTime || entertainmentDetails.driveTime || vendorDetails.driveTime;
+      if (driveTime) {
+        // driveTime might be a string like "25 miles" or just a number
+        if (typeof driveTime === 'number') return driveTime;
+        if (typeof driveTime === 'string') {
+          const match = (driveTime as string).match(/(\d+)/);
+          if (match) return parseInt(match[1], 10);
+        }
+      }
+
+      return null;
+    };
+
+    const coords = getCoordinates();
+
     // Build common fields
     const provider: Record<string, unknown> = {
       id: data.id,
       category,
-      name: extractName(data),
+      name: extractName(data, category),
       contactName: data.contactName || null,
       phone: data.phone || null,
       email: data.email || null,
-      address: data.address || null,
+      address: getAddress(),
       website: data.website || null,
-      city: data.city || null,
-      state: data.state || null,
-      zipCode: data.zipCode || null,
+      city: getCity(),
+      state: getState(),
+      zipCode: data.zipCode || formData.zipCode || null,
       // Location coordinates
-      lat: data.lat || data.latitude || (data.coordinates as any)?.lat || (data.location as any)?.lat || null,
-      lng: data.lng || data.longitude || (data.coordinates as any)?.lng || (data.location as any)?.lng || null,
+      lat: coords.lat,
+      lng: coords.lng,
       rating: data.rating || data.averageRating || null,
       reviewCount: data.reviewCount || data.totalReviews || null,
       imageUrls: extractImageUrls(data),
       primaryImageUrl: data.primaryImageUrl || data.coverPhoto || formData.coverPhoto || null,
       specialFeatures: data.specialFeatures || [],
-      serviceRadius: data.serviceRadius || null,
+      serviceRadius: getServiceRadius(),
+      serviceLocation: getServiceLocation(),
       yearsInBusiness: data.yearsInBusiness || data.yearsInOperation || null,
 
       // Bio and description
@@ -248,6 +532,18 @@ export async function GET(
         waiveMinimum: highVolume.waiveMinimum || false,
       } : null;
 
+      // Service options - pickup/delivery
+      provider.offersPickup = foodBeverageDetails.offersPickup || formData.offersPickup || data.offersPickup || false;
+      provider.offersDelivery = foodBeverageDetails.offersDelivery || formData.offersDelivery || data.offersDelivery || false;
+      provider.offersOnSite = foodBeverageDetails.offersOnSite || formData.offersOnSite || data.offersOnSite || false;
+      provider.deliveryFee = foodBeverageDetails.deliveryFee || formData.deliveryFee || null;
+      provider.pickupLocation = foodBeverageDetails.pickupLocation || formData.pickupLocation || data.pickupLocation || null;
+
+      // Business operations
+      provider.hoursOfOperation = foodBeverageDetails.hoursOfOperation || formData.hoursOfOperation || null;
+      provider.daysOfOperation = foodBeverageDetails.daysOfOperation || formData.daysOfOperation || [];
+      provider.operatingSchedule = foodBeverageDetails.operatingSchedule || formData.operatingSchedule || null;
+
       // FoodBeverage-specific policies
       provider.cancellationPolicy = foodBeverageDetails.cancellationPolicy || formData.cancellationPolicy || data.cancellationPolicy || null;
       provider.depositPercentage = foodBeverageDetails.depositPercentage || formData.depositPercentage || data.depositPercentage || null;
@@ -267,6 +563,14 @@ export async function GET(
       provider.performanceStyles = entertainmentDetails.performanceStyles || [];
       provider.specializations = entertainmentDetails.specializations || [];
       provider.achievements = entertainmentDetails.achievements || null;
+
+      // Act description - the main bio/description for entertainers
+      provider.actDescription = entertainmentDetails.actDescription ||
+                                formData.actDescription ||
+                                data.actDescription ||
+                                entertainmentDetails.description ||
+                                formData.description ||
+                                data.description || null;
 
       // Pricing
       provider.compensationFlatFee = data.compensationFlatFee || entertainmentDetails.typicalPerformanceFee || null;
@@ -331,6 +635,21 @@ export async function GET(
       provider.accessibility = Array.isArray(accessibility) ? accessibility : [];
       provider.includedRentals = Array.isArray(includedRentals) ? includedRentals : [];
 
+      // Venue spaces with full details
+      const rawVenueSpaces = formData.venueSpaces || venueDetails.venueSpaces || data.venueSpaces || [];
+      provider.venueSpaces = Array.isArray(rawVenueSpaces) ? rawVenueSpaces.map((space: any) => ({
+        id: space.id || null,
+        name: space.name || 'Main Space',
+        description: space.description || null,
+        squareFeet: space.squareFeet || space.squareFootage || null,
+        seatedCapacity: space.seatedCapacity || space.capacitySeated || null,
+        standingCapacity: space.standingCapacity || space.capacityStanding || null,
+        hourlyRate: space.hourlyRate || space.pricePerHour || null,
+        photos: space.photos || [],
+        amenities: space.amenities || [],
+        layoutOptions: space.layoutOptions || [],
+      })) : [];
+
       // Parking
       provider.parking = data.parking || venueDetails.parking || null;
       provider.parkingDetails = venueDetails.parkingDetails || null;
@@ -392,17 +711,45 @@ export async function GET(
     }
 
     if (category === 'Vendors') {
-      const productCategory = data.productCategory || vendorDetails.productCategory;
-      const inventoryModel = data.inventoryModel || vendorDetails.inventoryModel;
+      const productCategory = data.productCategory || vendorDetails.productCategory || formData.productCategory;
+      const serviceCategory = data.serviceCategory || vendorDetails.serviceCategory || formData.serviceCategory;
+      const inventoryModel = data.inventoryModel || vendorDetails.inventoryModel || formData.inventoryModel;
+      const specializations = data.specializations || vendorDetails.specializations || formData.specializations;
+      const productTypes = data.productTypes || vendorDetails.productTypes || formData.productTypes;
+      const preferredEventTypes = data.preferredEventTypes || vendorDetails.preferredEventTypes || formData.preferredEventTypes;
 
       provider.productCategory = Array.isArray(productCategory) ? productCategory.join(', ') : productCategory || null;
-      provider.productionType = data.productionType || vendorDetails.productionType || null;
-      provider.averagePriceRange = data.averagePriceRange || vendorDetails.averagePriceRange || null;
+      provider.serviceCategory = Array.isArray(serviceCategory) ? serviceCategory.join(', ') : serviceCategory || null;
+      provider.productionType = data.productionType || vendorDetails.productionType || formData.productionType || null;
+      provider.averagePriceRange = data.averagePriceRange || vendorDetails.averagePriceRange || formData.averagePriceRange || null;
+      provider.typicalProductPrice = data.typicalProductPrice || vendorDetails.typicalProductPrice || formData.typicalProductPrice || null;
       provider.inventoryModel = Array.isArray(inventoryModel) ? inventoryModel.join(', ') : inventoryModel || null;
-      provider.minimumOrderRequirement = data.minimumOrderRequirement || vendorDetails.minimumOrder || null;
+      provider.minimumOrderRequirement = data.minimumOrderRequirement || vendorDetails.minimumOrder || formData.minimumOrder || null;
       provider.businessType = vendorDetails.businessType || formData.businessType || data.businessType || null;
-      provider.serviceCategory = vendorDetails.serviceCategory || formData.serviceCategory || null;
-      provider.serviceDescription = vendorDetails.serviceDescription || formData.serviceDescription || null;
+      provider.serviceDescription = vendorDetails.serviceDescription || formData.serviceDescription || data.serviceDescription || null;
+      provider.productDescription = vendorDetails.productDescription || formData.productDescription || data.productDescription || null;
+      provider.specializations = Array.isArray(specializations) ? specializations : [];
+      provider.productTypes = Array.isArray(productTypes) ? productTypes : [];
+      provider.preferredEventTypes = Array.isArray(preferredEventTypes) ? preferredEventTypes : [];
+
+      // Product-specific features
+      provider.customPersonalized = vendorDetails.customPersonalized || formData.customPersonalized || false;
+      provider.ecoFriendly = vendorDetails.ecoFriendly || formData.ecoFriendly || false;
+      provider.giftReadyPackaging = vendorDetails.giftReadyPackaging || formData.giftReadyPackaging || false;
+      provider.locallyMade = vendorDetails.locallyMade || formData.locallyMade || false;
+      provider.culturallyInspired = vendorDetails.culturallyInspired || formData.culturallyInspired || false;
+
+      // Service-specific features
+      provider.availableWeekends = vendorDetails.availableWeekends || formData.availableWeekends || false;
+      provider.sameDayAvailable = vendorDetails.sameDayAvailable || formData.sameDayAvailable || false;
+      provider.travelFlexible = vendorDetails.travelFlexible || formData.travelFlexible || false;
+      provider.multipleEventsSameDay = vendorDetails.multipleEventsSameDay || formData.multipleEventsSameDay || false;
+      provider.bilingual = vendorDetails.bilingual || formData.bilingual || false;
+      provider.fullyInsured = vendorDetails.fullyInsured || formData.fullyInsured || false;
+
+      // Travel policy
+      provider.travelPolicy = vendorDetails.travelPolicy || formData.travelPolicy || data.travelPolicy || null;
+      provider.travelNotes = vendorDetails.travelNotes || formData.travelNotes || data.travelNotes || null;
 
       // Products and services - check ALL sources in priority order
       // serviceItems is primary, addOnItems is fallback (legacy field name)
