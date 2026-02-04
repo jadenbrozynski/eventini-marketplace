@@ -652,26 +652,78 @@ export default function ProviderDetailPage() {
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string | null>(null);
   const [expandedServices, setExpandedServices] = useState<Set<number>>(new Set());
 
+  // Transform raw Firestore data to ProviderDetails format
+  const provider: ProviderDetails | null = rawProvider ? {
+    id: rawProvider.id as string,
+    category: (rawProvider.category as string) || 'Vendors',
+    name: (rawProvider.businessName || rawProvider.businessTitle || rawProvider.stageName || rawProvider.venueName || rawProvider.name || rawProvider.contactName || '') as string,
+    contactName: rawProvider.contactName as string | undefined,
+    phone: rawProvider.phone as string | undefined,
+    email: rawProvider.email as string | undefined,
+    address: rawProvider.address as string | undefined,
+    website: rawProvider.website as string | undefined,
+    city: rawProvider.city as string | undefined,
+    state: rawProvider.state as string | undefined,
+    lat: rawProvider.lat as number | undefined,
+    lng: rawProvider.lng as number | undefined,
+    rating: rawProvider.rating as number | undefined,
+    reviewCount: rawProvider.reviewCount as number | undefined,
+    imageUrls: (rawProvider.imageUrls || rawProvider.businessPhotos || rawProvider.photos || []) as string[],
+    primaryImageUrl: (rawProvider.primaryImageUrl || rawProvider.coverPhoto) as string | undefined,
+    specialFeatures: rawProvider.specialFeatures as string[] | undefined,
+    serviceRadius: rawProvider.serviceRadius as number | undefined,
+    yearsInBusiness: rawProvider.yearsInBusiness as string | undefined,
+    bio: rawProvider.bio as string | undefined,
+    description: rawProvider.description as string | undefined,
+    ownerIdentityTags: rawProvider.ownerIdentityTags as string[] | undefined,
+    leadTimeRequired: rawProvider.leadTimeRequired as string | undefined,
+    socialMedia: rawProvider.socialMedia,
+    cancellationPolicy: rawProvider.cancellationPolicy as string | undefined,
+    cuisineTypes: rawProvider.cuisineTypes as string | undefined,
+    serviceStyle: rawProvider.serviceStyle as string | undefined,
+    dietarySpecialties: rawProvider.dietarySpecialties as string[] | undefined,
+    traits: rawProvider.traits as string[] | undefined,
+    minimumGuarantee: rawProvider.minimumGuarantee as string | undefined,
+    foodTruckDimensions: rawProvider.foodTruckDimensions as string | undefined,
+    aLaCarteMenu: rawProvider.aLaCarteMenu as MenuItem[] | undefined,
+    cateringPackages: rawProvider.cateringPackages as CateringPackage[] | undefined,
+    nonprofitFlexibility: rawProvider.nonprofitFlexibility,
+    highVolumePartner: rawProvider.highVolumePartner,
+    genres: rawProvider.genres as string | undefined,
+    performanceType: rawProvider.performanceType as string | undefined,
+    performanceLength: rawProvider.performanceLength as string | undefined,
+    technicalRequirements: rawProvider.technicalRequirements as string | undefined,
+    specializations: rawProvider.specializations as string[] | undefined,
+    compensationFlatFee: rawProvider.compensationFlatFee as string | undefined,
+    compensationHourly: rawProvider.compensationHourly as string | undefined,
+    basedIn: rawProvider.basedIn as string | undefined,
+    travelPolicy: rawProvider.travelPolicy as string | undefined,
+    venueType: rawProvider.venueType as string | undefined,
+    capacitySeated: rawProvider.capacitySeated as string | undefined,
+    capacityStanding: rawProvider.capacityStanding as string | undefined,
+    squareFootage: rawProvider.squareFootage as string | undefined,
+    amenities: rawProvider.amenities as string[] | undefined,
+    includedRentals: rawProvider.includedRentals as string[] | undefined,
+    parking: rawProvider.parking as string | undefined,
+    kitchenAccess: rawProvider.kitchenAccess as string | undefined,
+    alcoholPolicy: rawProvider.alcoholPolicy as string | undefined,
+    wifiAvailable: rawProvider.wifiAvailable as boolean | undefined,
+    rentalFeeHourly: rawProvider.rentalFeeHourly as string | undefined,
+    rentalFeeFlatRate: rawProvider.rentalFeeFlatRate as string | undefined,
+    productCategories: rawProvider.productCategories as string[] | undefined,
+    shippingOptions: rawProvider.shippingOptions as string[] | undefined,
+    customizationAvailable: rawProvider.customizationAvailable as boolean | undefined,
+    minimumOrderQuantity: rawProvider.minimumOrderQuantity as string | undefined,
+    priceRangeLow: rawProvider.priceRangeLow as string | undefined,
+    priceRangeHigh: rawProvider.priceRangeHigh as string | undefined,
+  } : null;
+
+  // Default to catering if no a la carte items
   useEffect(() => {
-    async function fetchProvider() {
-      try {
-        const res = await fetch(`/api/providers/${params.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setProvider(data.provider);
-          // Default to catering if no a la carte items
-          if (data.provider?.cateringPackages?.length > 0 && !data.provider?.aLaCarteMenu?.length) {
-            setSelectedMenuType('catering');
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching provider:', error);
-      } finally {
-        setIsLoading(false);
-      }
+    if (provider?.cateringPackages?.length && !provider?.aLaCarteMenu?.length) {
+      setSelectedMenuType('catering');
     }
-    if (params.id) fetchProvider();
-  }, [params.id]);
+  }, [provider]);
 
   if (isLoading) {
     return (
