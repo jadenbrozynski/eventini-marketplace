@@ -1202,12 +1202,16 @@ export default function ProviderDetailPage() {
                       <span className="text-gray-500 text-sm">{provider.rentalFeeHourly ? ' /hour' : ' flat'}</span>
                     </>
                   )}
-                  {provider.category === 'Vendors' && provider.minimumOrderRequirement && (
-                    <>
-                      <span className="text-xl font-semibold">${String(provider.minimumOrderRequirement).replace(/^\$/, '')}</span>
-                      <span className="text-gray-500 text-sm"> minimum order</span>
-                    </>
-                  )}
+                  {provider.category === 'Vendors' && (() => {
+                    const lowestPrice = provider.serviceItems?.reduce((min: number | null, item: any) => {
+                      const price = typeof item.price === 'number' ? item.price : parseFloat(item.price);
+                      if (!isNaN(price) && price > 0) return min === null ? price : Math.min(min, price);
+                      return min;
+                    }, null as number | null);
+                    if (lowestPrice) return <><span className="text-xl font-semibold">${lowestPrice.toLocaleString()}</span><span className="text-gray-500 text-sm"> starting</span></>;
+                    if (provider.minimumOrderRequirement) return <><span className="text-xl font-semibold">${String(provider.minimumOrderRequirement).replace(/^\$/, '')}</span><span className="text-gray-500 text-sm"> minimum</span></>;
+                    return null;
+                  })()}
                 </div>
 
                 {/* Quick highlights */}
@@ -2063,12 +2067,16 @@ export default function ProviderDetailPage() {
                     <span className="text-gray-500 text-sm">{provider.rentalFeeHourly ? ' /hour' : ' flat'}</span>
                   </>
                 )}
-                {provider.category === 'Vendors' && provider.minimumOrderRequirement && (
-                  <>
-                    <span className="text-xl font-semibold">${String(provider.minimumOrderRequirement).replace(/^\$/, '')}</span>
-                    <span className="text-gray-500 text-sm"> minimum order</span>
-                  </>
-                )}
+                {provider.category === 'Vendors' && (() => {
+                  const lowestPrice = provider.serviceItems?.reduce((min: number | null, item: any) => {
+                    const price = typeof item.price === 'number' ? item.price : parseFloat(item.price);
+                    if (!isNaN(price) && price > 0) return min === null ? price : Math.min(min, price);
+                    return min;
+                  }, null as number | null);
+                  if (lowestPrice) return <><span className="text-xl font-semibold">${lowestPrice.toLocaleString()}</span><span className="text-gray-500 text-sm"> starting</span></>;
+                  if (provider.minimumOrderRequirement) return <><span className="text-xl font-semibold">${String(provider.minimumOrderRequirement).replace(/^\$/, '')}</span><span className="text-gray-500 text-sm"> minimum</span></>;
+                  return null;
+                })()}
               </div>
 
               <button className="w-full bg-[#44646c] text-white font-semibold py-3 px-4 rounded-lg hover:bg-[#3a565d] transition-colors mb-3">
@@ -2235,12 +2243,16 @@ export default function ProviderDetailPage() {
                 <span className="text-gray-500 text-sm">{provider.rentalFeeHourly ? '/hr' : ''}</span>
               </>
             )}
-            {provider.category === 'Vendors' && provider.minimumOrderRequirement && (
-              <>
-                <span className="text-lg font-semibold">${String(provider.minimumOrderRequirement).replace(/^\$/, '')}</span>
-                <span className="text-gray-500 text-sm"> min</span>
-              </>
-            )}
+            {provider.category === 'Vendors' && (() => {
+              const lowestPrice = provider.serviceItems?.reduce((min: number | null, item: any) => {
+                const price = typeof item.price === 'number' ? item.price : parseFloat(item.price);
+                if (!isNaN(price) && price > 0) return min === null ? price : Math.min(min, price);
+                return min;
+              }, null as number | null);
+              if (lowestPrice) return <><span className="text-lg font-semibold">${lowestPrice.toLocaleString()}</span><span className="text-gray-500 text-sm"> starting</span></>;
+              if (provider.minimumOrderRequirement) return <><span className="text-lg font-semibold">${String(provider.minimumOrderRequirement).replace(/^\$/, '')}</span><span className="text-gray-500 text-sm"> min</span></>;
+              return null;
+            })()}
           </div>
           <button className="bg-[#44646c] text-white font-semibold py-3 px-8 rounded-lg hover:bg-[#3a565d] transition-colors">
             Book
